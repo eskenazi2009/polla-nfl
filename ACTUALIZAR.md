@@ -6,6 +6,14 @@ Página publicada (GitHub Pages): https://eskenazi2009.github.io/polla-nfl/
 Todo es de solo lectura sobre Splash Sports: no hacer clic en nada de la página,
 no cambiar piques, no escribir usuarios ni contraseñas, no cerrar sesión.
 
+CUENTA POR DEFECTO: **Kvetchers** (tonye@lafayettezl.com). Las tareas corren con la
+sesión que esté activa en el navegador integrado; el dueño la deja en Kvetchers.
+- Con Kvetchers se leen: la Polla (pick'em), Super Survivor y Homicida — incluido el
+  "más escogidos" de ambos survivor.
+- KIBBEH solo está en la Polla y en Homicida (no en Super Survivor). Sus entradas de
+  Homicida ya están guardadas; build.py NO las borra al correr con Kvetchers (mezcla
+  por cuenta). Solo hay que volver a correr con KIBBEH si cambian sus piques.
+
 ## Pasos
 
 1. Cargar las herramientas del navegador integrado con ToolSearch
