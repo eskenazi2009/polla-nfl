@@ -170,9 +170,28 @@ table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
 .std tr:last-child td{border-bottom:0}
 .std .r{width:64px;color:var(--ink-2)}
 .std .rt{text-align:right}
+.std tr.part{cursor:pointer}
+.std tr.part:hover td{background:var(--bar-bg)}
 .std tr.me td{background:var(--c-tint);font-weight:600}
 .std tr.me td:first-child{box-shadow:inset 4px 0 0 var(--c)}
 .std tr.gap td{color:var(--muted);text-align:center;font-size:12px;padding:5px}
+.std .caret{display:inline-block;width:1.1em;color:var(--muted);font-size:11px}
+.std tr.part.open td{background:var(--bar-bg)}
+.std .picksrow td{padding:0;background:var(--ground)}
+.pl-rec{padding:10px 16px 2px;font:700 14px/1 var(--display);color:var(--ink-2);letter-spacing:.02em}
+.pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px;padding:10px 16px 14px}
+.pl .pk{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:6px;background:var(--surface);border:1px solid var(--line);font-size:12px}
+.pl .pk .mt{color:var(--muted);font-variant-numeric:tabular-nums}
+.pl .pk .at{margin:0 2px;opacity:.6}
+.pl .pk .ch{font:700 15px/1 var(--display)}
+.pl .pk .sp2{font:500 11px/1 var(--body);color:var(--muted);margin-left:4px}
+.pl .pk.won{background:var(--won-tint);border-color:transparent} .pl .pk.won .ch{color:var(--won-ink)}
+.pl .pk.lost{background:var(--lost-tint);border-color:transparent} .pl .pk.lost .ch{color:var(--lost-ink)}
+.pl .pk.push{background:var(--push-tint);border-color:transparent}
+.pl .pk.pending .ch{color:var(--ink)}
+.pl .pk.wait{border-style:dashed} .pl .pk.wait .ch{color:var(--muted);font-size:12px}
+.pl .pk.none .ch{color:var(--muted)}
+.pl-empty{padding:14px 16px;color:var(--muted);font-size:13px}
 .linkbtn{border:1px solid var(--line-2);background:var(--raised);border-radius:7px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
 .linkbtn:hover{border-color:var(--ink-2)}
 footer{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
@@ -217,8 +236,7 @@ footer a{color:var(--ink-2)}
         <div class="seg weekseg" id="weekseg" role="group" aria-label="Semana"></div>
         <div class="seg" id="filterseg" role="group" aria-label="Filtro">
           <button type="button" id="f-all" data-f="all" aria-pressed="true">Todos</button>
-          <button type="button" id="f-pend" data-f="pend" aria-pressed="false">Pendientes</button>
-          <button type="button" id="f-split" data-f="split" aria-pressed="false">Divididos</button>
+          <button type="button" id="f-same" data-f="same" aria-pressed="false">Iguales</button>
         </div>
       </div>
     </div>
@@ -226,34 +244,11 @@ footer a{color:var(--ink-2)}
   </section>
 
   <section class="block">
-    <div class="block-head"><h2>Rendimiento</h2></div>
-    <div class="charts">
-      <div class="card">
-        <h3>Aciertos por semana</h3>
-        <div class="legend" id="leg1"></div>
-        <div class="chart" id="chWeeks"></div>
-      </div>
-      <div class="card">
-        <h3>Dónde están en la polla</h3>
-        <div class="note" id="histnote"></div>
-        <div class="chart" id="chHist"></div>
-      </div>
-      <div class="card vs">
-        <h3>Con o contra la polla</h3>
-        <div class="note">Récord cuando su pique coincidió con la mayoría de la polla, y cuando fue en contra.</div>
-        <div id="vsTable"></div>
-      </div>
-      <div class="card">
-        <h3>Posición en el tiempo</h3>
-        <div class="legend" id="leg2"></div>
-        <div class="chart" id="chRank"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="block">
     <div class="block-head">
-      <h2>Tabla</h2>
+      <div>
+        <h2>Tabla</h2>
+        <div class="sub">Toca a cualquier participante para ver sus piques de <b id="stdweek">la semana</b>.</div>
+      </div>
       <button type="button" class="linkbtn" id="stdtoggle">Ver la tabla completa</button>
     </div>
     <div class="tablewrap"><table class="std" id="std"></table></div>
@@ -264,7 +259,6 @@ footer a{color:var(--ink-2)}
     <a href="https://contests.app.splashsports.com/team-pickem/contests/contest_01KZPQ5VY6JW7J8MD54KDN44M1" target="_blank" rel="noopener">Abrir la polla en Splash</a>
   </footer>
 </div>
-<div class="tip" id="tip" hidden></div>
 
 <script>
 const DATA = /*__POLLA_DATA__*/null;
@@ -330,10 +324,6 @@ const leader = std[0];
   const html = ENTRIES.map((who, i) => {
     const s = std.find(x => x.h === who) || {};
     const wk = record(cur.games, who);
-    const all = weeks.flatMap(w => w.games);
-    const tot = record(all, who);
-    const behind = leader ? leader.w - s.w : 0;
-    const top10 = std[9] ? std[9].w - s.w : 0;
     return `<article class="entry" style="--c:var(--${ECOL[i]})">
       <div class="who"><h2>${esc(who)}</h2></div>
       <div class="rank num">${esc(s.dr || '–')}<small>de ${field} en la polla</small></div>
@@ -341,7 +331,6 @@ const leader = std[0];
         <div class="stat"><div class="k">Récord ATS</div><div class="v num">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</div></div>
         <div class="stat"><div class="k">% acierto</div><div class="v num">${pct(s.w, s.w + s.l)}</div></div>
         <div class="stat"><div class="k">${weekLabel(cur.n)}</div><div class="v num">${recStr(wk)}${wk.pend ? ` <span style="font:500 13px var(--body);color:var(--muted)">· ${wk.pend} por jugar</span>` : ''}</div></div>
-        <div class="stat"><div class="k">Del líder / del top 10</div><div class="v num ${behind > 0 ? 'bad' : 'good'}">${behind > 0 ? '−' + behind : 'Líder'} <span style="color:var(--muted);font-weight:500">/</span> ${top10 > 0 ? '−' + top10 : top10 === 0 ? '0' : '+' + (-top10)}</div></div>
       </div>
     </article>`;
   }).join('');
@@ -398,10 +387,9 @@ function renderBoard() {
   $('weeksum').innerHTML = ENTRIES.map((e, i) => { const r = record(games, e); return `<span><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)} <b class="num">${recStr(r)}</b></span>`; }).join('') +
     `<span>Coinciden en <b class="num">${same}</b> de ${known}${known < games.length ? ` <span style="color:var(--muted)">(${games.length - known} aún ocultos)</span>` : ''}</span>`;
   let list = games;
-  if (filter === 'pend') list = games.filter(g => gameState(g) !== 'final');
-  if (filter === 'split') list = games.filter(isSplit);
+  if (filter === 'same') list = games.filter(g => ENTRIES.every(e => g.picks[e]) && !isSplit(g));
   const head = `<div class="bhead"><span>Hora</span><span>Partido · spread</span>${ENTRIES.map((e, i) => `<span class="e"><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</span>`).join('')}<span>Pique de la polla</span></div>`;
-  if (!list.length) { $('board').innerHTML = head + `<div class="empty">${filter === 'pend' ? 'No quedan partidos por jugar en esta semana.' : 'Esta semana no hay partidos donde las dos cuentas escogieron distinto.'}</div>`; return; }
+  if (!list.length) { $('board').innerHTML = head + `<div class="empty">${known < games.length ? 'Los piques de ambas cuentas se ven cuando cierra la semana.' : 'Las dos cuentas no coinciden en ningún partido de esta semana.'}</div>`; return; }
   $('board').innerHTML = head + list.map(g => {
     const st = gameState(g);
     const stTxt = st === 'final' ? 'Final' : st === 'live' ? 'En vivo' : fmtTime(g.at);
@@ -413,125 +401,55 @@ function renderBoard() {
     </div>`;
   }).join('');
 }
-$('weekseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; selWeek = b.dataset.w; renderWeekSeg(); renderBoard(); });
+$('weekseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; selWeek = b.dataset.w; renderWeekSeg(); renderBoard(); if (typeof renderStd === 'function') renderStd(); });
 $('filterseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; try { localStorage.setItem('polla-filter', filter); } catch (err) {} renderWeekSeg(); renderBoard(); });
 renderWeekSeg(); renderBoard();
 
-/* Tooltip */
-const tip = $('tip');
-function showTip(ev, html) { tip.innerHTML = html; tip.hidden = false; const x = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8); tip.style.left = x + 'px'; tip.style.top = (ev.clientY + 14) + 'px'; }
-function hideTip() { tip.hidden = true; }
-function bindTips(root) {
-  root.querySelectorAll('[data-tip]').forEach(el => {
-    el.addEventListener('mousemove', ev => showTip(ev, el.dataset.tip));
-    el.addEventListener('mouseleave', hideTip);
-  });
-}
-const legend = () => ENTRIES.map((e, i) => `<span><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</span>`).join('');
-$('leg1').innerHTML = legend(); $('leg2').innerHTML = legend();
-
-/* Chart: wins per week (grouped bars) */
-(function weeksChart() {
-  const W = 520, H = 220, m = { l: 28, r: 8, t: 18, b: 26 };
-  const iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const max = Math.max(16, ...weeks.map(w => w.games.length));
-  const y = v => m.t + ih - v / max * ih;
-  const gw = iw / weeks.length, bw = Math.min(26, (gw - 14) / 2);
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Aciertos por semana de cada cuenta">`;
-  for (const v of [0, 4, 8, 12, 16]) s += `<line class="${v ? 'grid' : 'axis'}" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
-  weeks.forEach((w, wi) => {
-    const cx = m.l + gw * wi + gw / 2;
-    ENTRIES.forEach((e, i) => {
-      const r = record(w.games, e);
-      const x = cx - bw - 1 + i * (bw + 2);
-      const h = Math.max(0, y(0) - y(r.w));
-      const tipTxt = `<b>${esc(e)}</b> · ${esc(weekLabel(w.n))}<br>${recStr(r)} ATS${r.pend ? ` · ${r.pend} por jugar` : ''}`;
-      s += `<path d="M${x},${y(0)} v${-Math.max(h - 4, 0)} q0,-4 4,-4 h${bw - 8} q4,0 4,4 v${Math.max(h - 4, 0)} z" fill="var(--${ECOL[i]})" data-tip="${esc(tipTxt)}"/>`;
-      s += `<text class="val" x="${x + bw / 2}" y="${y(r.w) - 5}" text-anchor="middle">${r.w}</text>`;
-    });
-    s += `<text x="${cx}" y="${H - 8}" text-anchor="middle">S${weekNum(w.n)}${w.status !== 'settled' ? '*' : ''}</text>`;
-  });
-  s += `</svg>`;
-  $('chWeeks').innerHTML = s + (weeks.some(w => w.status !== 'settled') ? `<div class="note">* semana en curso</div>` : '');
-  bindTips($('chWeeks'));
-})();
-
-/* Chart: histogram of wins across the pool */
-(function hist() {
-  const counts = {}; std.forEach(s => counts[s.w] = (counts[s.w] || 0) + 1);
-  const ws = std.map(s => s.w); const lo = Math.min(...ws), hi = Math.max(...ws);
-  const W = 520, H = 220, m = { l: 28, r: 8, t: 30, b: 26 };
-  const iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const maxC = Math.max(...Object.values(counts));
-  const n = hi - lo + 1, bw = iw / n;
-  const y = v => m.t + ih - v / maxC * ih;
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Distribución de victorias en la polla">`;
-  const step = maxC > 12 ? 5 : 2;
-  for (let v = 0; v <= maxC; v += step) s += `<line class="${v ? 'grid' : 'axis'}" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
-  for (let w = lo; w <= hi; w++) {
-    const c = counts[w] || 0; const x = m.l + (w - lo) * bw + 1;
-    const mine = ENTRIES.map((e, i) => std.find(s => s.h === e && s.w === w) ? i : -1).filter(i => i >= 0);
-    const fill = mine.length ? `var(--${ECOL[mine[0]]})` : 'var(--line-2)';
-    if (c) s += `<rect x="${x}" y="${y(c)}" width="${bw - 2}" height="${y(0) - y(c)}" rx="3" fill="${fill}" data-tip="${esc(`<b>${w} victorias</b><br>${c} participante${c > 1 ? 's' : ''}` + (mine.length ? `<br>Incluye a ${mine.map(i => ENTRIES[i]).join(' y ')}` : ''))}"/>`;
-    if (mine.length) mine.forEach((i, k) => { s += `<text class="val" x="${x + (bw - 2) / 2}" y="${y(c) - 8 - k * 13}" text-anchor="middle" style="fill:var(--${ECOL[i]})">${esc(ENTRIES[i])}</text>`; });
-    s += `<text x="${x + (bw - 2) / 2}" y="${H - 8}" text-anchor="middle">${w}</text>`;
-  }
-  s += `</svg>`;
-  $('chHist').innerHTML = s;
-  const median = [...ws].sort((a, b) => a - b)[Math.floor(ws.length / 2)];
-  $('histnote').textContent = `Victorias ATS de los ${field} participantes. Líder: ${leader.h} con ${leader.w}. Mediana: ${median}.`;
-  bindTips($('chHist'));
-})();
-
-/* With vs against the pool */
-(function vs() {
-  const rows = ENTRIES.map((e, i) => {
-    const withR = { w: 0, l: 0 }, agR = { w: 0, l: 0 };
-    for (const w of weeks) for (const g of w.games) {
-      const p = g.picks[e]; if (!p || !g.dist) continue;
-      const r = pickResult(g, p); if (r !== 'won' && r !== 'lost') continue;
-      const other = p.t === g.away.ab ? g.home.ab : g.away.ab;
-      const mine = g.dist[p.t]?.pct ?? 0, theirs = g.dist[other]?.pct ?? 0;
-      const bucket = mine >= theirs ? withR : agR;
-      bucket[r === 'won' ? 'w' : 'l']++;
-    }
-    return `<tr><td><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</td><td>${withR.w}-${withR.l} <span style="color:var(--muted)">${pct(withR.w, withR.w + withR.l)}</span></td><td>${agR.w}-${agR.l} <span style="color:var(--muted)">${pct(agR.w, agR.w + agR.l)}</span></td></tr>`;
-  }).join('');
-  $('vsTable').innerHTML = `<table><thead><tr><th>Cuenta</th><th>Con la mayoría</th><th>Contra la mayoría</th></tr></thead><tbody>${rows}</tbody></table>`;
-})();
-
-/* Rank over time */
-(function rankChart() {
-  const hist = DATA.history || [];
-  if (hist.length < 2) {
-    const h = hist[0];
-    $('chRank').innerHTML = `<div class="note">El historial se llena solo con cada actualización. Primera foto${h ? ' del ' + esc(h.d) : ''}: ` +
-      ENTRIES.map(e => h && h[e] ? `${esc(e)} ${esc(h[e].dr)}` : '').filter(Boolean).join(', ') + '.</div>';
-    return;
-  }
-  const W = 520, H = 220, m = { l: 34, r: 12, t: 12, b: 26 };
-  const iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const fieldN = Math.max(...hist.map(h => h.field || field));
-  const y = r => m.t + (r - 1) / (fieldN - 1) * ih;
-  const x = i => m.l + (hist.length === 1 ? iw / 2 : i / (hist.length - 1) * iw);
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Posición en la tabla por fecha">`;
-  const ticks = [1, 25, 50, 75, fieldN].filter((v, i, a) => v <= fieldN && a.indexOf(v) === i);
-  for (const v of ticks) s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
-  const every = Math.ceil(hist.length / 6);
-  hist.forEach((h, i) => { if (i % every === 0 || i === hist.length - 1) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(h.d.slice(5))}</text>`; });
-  ENTRIES.forEach((e, k) => {
-    const pts = hist.map((h, i) => h[e] ? [x(i), y(h[e].r), h] : null).filter(Boolean);
-    s += `<polyline fill="none" stroke="var(--${ECOL[k]})" stroke-width="2" stroke-linejoin="round" points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}"/>`;
-    pts.forEach((p, j) => { s += `<circle cx="${p[0]}" cy="${p[1]}" r="${j === pts.length - 1 ? 5 : 3.5}" fill="var(--${ECOL[k]})" stroke="var(--surface)" stroke-width="2" data-tip="${esc(`<b>${e}</b> · ${p[2].d}<br>Puesto ${p[2][e].dr} · ${p[2][e].w}-${p[2][e].l}`)}"/>`; });
-  });
-  s += `</svg>`;
-  $('chRank').innerHTML = s + `<div class="note">Arriba es mejor (puesto 1).</div>`;
-  bindTips($('chRank'));
-})();
-
-/* Standings */
+/* Standings — cada participante se expande con sus piques de la semana seleccionada */
 let showAll = false;
+const open = new Set();
+
+// Piques de un participante en la semana seleccionada: gameId -> alias.
+function entryPicks(handle) {
+  const ap = (DATA.allPicks || {})[selWeek];
+  if (!ap || !ap.p || ap.p[handle] == null) return null;
+  const aliases = ap.p[handle].split(',');
+  const map = {};
+  ap.gids.forEach((gid, i) => { if (aliases[i] && aliases[i] !== '-') map[gid] = aliases[i]; });
+  return map;
+}
+function outcome(g, alias) {
+  if (!alias) return 'none';
+  if (gameState(g) !== 'final') return 'pending';
+  const m = coverMargin(g, alias);
+  return m > 0 ? 'won' : m < 0 ? 'lost' : 'push';
+}
+function picksPanel(handle) {
+  const wk = weeks.find(w => w.n === selWeek);
+  const map = entryPicks(handle);
+  if (!map) {
+    const locked = new Date(wk.lock).getTime() <= now;
+    return `<div class="pl-empty">${locked ? 'No hay piques guardados de esta semana.' : 'Los piques de los demás se ven cuando cierra la semana (' + fmtDay(wk.lock) + ' ' + fmtTime(wk.lock) + ').'}</div>`;
+  }
+  let w = 0, l = 0, hidden = 0;
+  const chips = wk.games.map(g => {
+    const alias = map[g.id];
+    const locked = new Date(g.lockAt).getTime() <= now;
+    let r, inner;
+    if (alias) {
+      r = outcome(g, alias);
+      if (r === 'won') w++; else if (r === 'lost') l++;
+      const [t] = teamOf(g, alias);
+      inner = `${esc(alias)}<span class="sp2">${spr(t.sp)}</span>`;
+    } else if (!locked) { r = 'wait'; inner = '🔒'; hidden++; }
+    else { r = 'none'; inner = '—'; }
+    return `<div class="pk ${r}"><span class="mt">${esc(g.away.ab)}<span class="at">@</span>${esc(g.home.ab)}</span><span class="ch">${inner}</span></div>`;
+  }).join('');
+  const rec = `${w}-${l} ATS en ${weekLabel(wk.n)}` + (hidden ? ` · ${hidden} por revelarse` : '');
+  return `<div class="pl-rec">${rec}</div><div class="pl">${chips}</div>`;
+}
 function renderStd() {
+  $('stdweek').textContent = weekLabel(selWeek);
   const mineIdx = std.map((s, i) => s.me ? i : -1).filter(i => i >= 0);
   const keep = new Set();
   if (showAll) std.forEach((_, i) => keep.add(i));
@@ -545,11 +463,14 @@ function renderStd() {
     if (prev >= 0 && i - prev > 1) rows += `<tr class="gap"><td colspan="4">· · ·</td></tr>`;
     prev = i;
     const ei = ENTRIES.indexOf(s.h);
-    rows += `<tr class="${s.me ? 'me' : ''}" ${ei >= 0 ? `style="--c:var(--${ECOL[ei]});--c-tint:var(--${ECOL[ei]}-tint)"` : ''}><td class="r">${esc(s.dr)}</td><td>${esc(s.h)}</td><td class="rt">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="rt">${pct(s.w, s.w + s.l)}</td></tr>`;
+    const isOpen = open.has(s.h);
+    rows += `<tr class="part ${s.me ? 'me' : ''} ${isOpen ? 'open' : ''}" data-h="${esc(s.h)}" ${ei >= 0 ? `style="--c:var(--${ECOL[ei]});--c-tint:var(--${ECOL[ei]}-tint)"` : ''}><td class="r">${esc(s.dr)}</td><td><span class="caret">${isOpen ? '▾' : '▸'}</span>${esc(s.h)}</td><td class="rt">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="rt">${pct(s.w, s.w + s.l)}</td></tr>`;
+    if (isOpen) rows += `<tr class="picksrow"><td colspan="4">${picksPanel(s.h)}</td></tr>`;
   });
   $('std').innerHTML = `<thead><tr><th>Puesto</th><th>Participante</th><th class="rt">Récord</th><th class="rt">%</th></tr></thead><tbody>${rows}</tbody>`;
   $('stdtoggle').textContent = showAll ? 'Ver solo el resumen' : `Ver la tabla completa (${field})`;
 }
+$('std').addEventListener('click', e => { const tr = e.target.closest('tr.part'); if (!tr) return; const h = tr.dataset.h; if (open.has(h)) open.delete(h); else open.add(h); renderStd(); });
 $('stdtoggle').addEventListener('click', () => { showAll = !showAll; renderStd(); });
 renderStd();
 

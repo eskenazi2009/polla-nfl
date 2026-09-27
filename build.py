@@ -51,9 +51,13 @@ def merge_week(old, new, fetched_at):
 
 def main():
     store = load(STORE, {"weeks": [], "history": []})
+    store.setdefault("allPicks", {})
 
     if "--skip" in sys.argv:
-        print(json.dumps([w["n"] for w in store["weeks"] if w["status"] == "settled"]))
+        # Solo saltar semanas cerradas cuyos piques de todos ya están guardados.
+        done = [w["n"] for w in store["weeks"]
+                if w["status"] == "settled" and store["allPicks"].get(w["n"], {}).get("p")]
+        print(json.dumps(done))
         return
 
     snap = load(SNAPSHOT, None)
@@ -68,6 +72,8 @@ def main():
         by_name[w["n"]] = merge_week(by_name.get(w["n"]), w, fetched)
     store["weeks"] = sorted(by_name.values(), key=lambda w: int(w["n"].split()[-1]))
     store.update({k: snap[k] for k in ("fetchedAt", "contest", "loggedAs", "entries", "standings")})
+    for wk, val in snap.get("allPicks", {}).items():
+        store["allPicks"][wk] = val
 
     # Historial: una foto por día (hora de Panamá) con puesto y récord de cada cuenta.
     day = datetime.fromisoformat(fetched.replace("Z", "+00:00")).astimezone(PANAMA).date().isoformat()

@@ -18,18 +18,38 @@
     if (!r.ok) throw new Error(p + ' -> ' + r.status);
     return r.json();
   };
+  // Ejecuta las promesas en tandas para no saturar el API.
+  const pool = async (items, size, fn) => {
+    const out = [];
+    for (let i = 0; i < items.length; i += size) out.push(...await Promise.all(items.slice(i, i + size).map(fn)));
+    return out;
+  };
 
   try {
     const now = Date.now();
     const slates = (await get(`contests/slates?contestId=${CONTEST}&limit=25&offset=0`)).data;
-    // Semanas ya cerradas y guardadas en data.json: no se vuelven a bajar.
+    // Semanas ya cerradas Y con piques de todos ya guardados: no se vuelven a bajar.
     const skip = new Set(window.POLLA_SKIP || []);
     const active = slates.filter(s => !(s.status === 'settled' && skip.has(s.name)) && (
       s.status !== 'scheduled' || s.isCurrentSlate || new Date(s.windowStartDate).getTime() <= now));
 
-    // Piques de la cuenta con sesión iniciada (incluye piques aún no cerrados).
+    // Tabla completa: define el orden y da handle + entryId de cada participante.
+    const standings = [];
+    const roster = []; // { id, handle }
+    let cur = null;
+    for (let i = 0; i < 10; i++) {
+      const lb = await get(`leaderboards?contestId=${CONTEST}&limit=50` + (cur ? `&cursor=${cur}` : ''));
+      for (const e of lb.data) {
+        standings.push({ r: e.rank, dr: e.displayRank, h: e.user.handle, w: e.metadata.record.wins, l: e.metadata.record.losses, t: e.metadata.record.ties || 0, me: !!ENTRIES[e.entry.id] });
+        roster.push({ id: e.entry.id, handle: e.user.handle });
+      }
+      cur = lb.nextCursor;
+      if (!cur) break;
+    }
+
+    // Piques de mis dos cuentas aún sin cerrar (incluye la semana en curso).
     const mine = (await get(`my-entries?contestId=${CONTEST}&limit=20&offset=0&includePicks=true`)).data;
-    const openPicks = {}; // entryId -> gameId -> alias
+    const openPicks = {};
     for (const e of mine) {
       if (!ENTRIES[e.id] || !e.picks) continue;
       openPicks[e.id] = {};
@@ -37,6 +57,7 @@
     }
 
     const weeks = [];
+    const allPicks = {}; // nombre de semana -> { gids:[...], p:{ handle: "AL,AL,-,..." } }
     for (const s of active) {
       const base = `team-pickem/picksheets?contestId=${CONTEST}&slateId=${s.id}`;
       const [sheet, stats, ...entrySheets] = await Promise.all([
@@ -44,11 +65,15 @@
         get(`team-pickem/statistics?contestId=${CONTEST}&slateId=${s.id}&offset=0&limit=25`).catch(() => ({ data: [] })),
         ...Object.keys(ENTRIES).map(id => get(`${base}&entryId=${id}`)),
       ]);
-      const dist = {}; // gameId -> alias -> {pct, n, auto}
+      const dist = {};
       for (const gs of stats.data || []) {
         dist[gs.gameId] = {};
         for (const p of gs.picks) dist[gs.gameId][p.team.alias] = { pct: p.picked.percent, n: p.picked.count, auto: p.autoPicked.count };
       }
+      const idAlias = {};
+      for (const gm of sheet.data.games) { idAlias[gm.home.id] = gm.home.alias; idAlias[gm.away.id] = gm.away.alias; }
+      const gids = sheet.data.games.map(gm => gm.gameId);
+
       const games = sheet.data.games.map(gm => {
         const idToAlias = { [gm.home.id]: gm.home.alias, [gm.away.id]: gm.away.alias };
         const picks = {};
@@ -64,23 +89,23 @@
           away: team(gm.away), home: team(gm.home), tb: gm.isTiebreakerGame, picks, dist: dist[gm.gameId] || null,
         };
       });
-      weeks.push({
-        n: s.name, status: s.status, current: s.isCurrentSlate, lock: s.pickLockDate,
-        start: s.startDate, end: s.endDate, games,
-      });
-    }
+      weeks.push({ n: s.name, status: s.status, current: s.isCurrentSlate, lock: s.pickLockDate, start: s.startDate, end: s.endDate, games });
 
-    const standings = [];
-    let cur = null;
-    for (let i = 0; i < 10; i++) {
-      const lb = await get(`leaderboards?contestId=${CONTEST}&limit=50` + (cur ? `&cursor=${cur}` : ''));
-      for (const e of lb.data) standings.push({ r: e.rank, dr: e.displayRank, h: e.user.handle, w: e.metadata.record.wins, l: e.metadata.record.losses, t: e.metadata.record.ties || 0, me: !!ENTRIES[e.entry.id] });
-      cur = lb.nextCursor;
-      if (!cur) break;
+      // Piques de TODOS los participantes en esta semana (solo se revelan al cerrar cada juego).
+      const p = {};
+      await pool(roster, 10, async en => {
+        try {
+          const es = await get(`${base}&entryId=${en.id}`);
+          const byGid = {};
+          for (const gg of es.data.games) { const pk = gg.picks && gg.picks[0]; if (pk) byGid[gg.gameId] = idAlias[pk.value] || ''; }
+          if (Object.keys(byGid).length) p[en.handle] = gids.map(gid => byGid[gid] || '-').join(',');
+        } catch (e) { /* un entry que falle no detiene la semana */ }
+      });
+      allPicks[s.name] = { gids, p };
     }
 
     const loggedAs = Object.keys(openPicks).map(id => ENTRIES[id]);
-    return JSON.stringify({ fetchedAt: new Date().toISOString(), contest: 'POLLA PANAMA 2026', loggedAs, entries: Object.values(ENTRIES), weeks, standings });
+    return JSON.stringify({ fetchedAt: new Date().toISOString(), contest: 'POLLA PANAMA 2026', loggedAs, entries: Object.values(ENTRIES), weeks, allPicks, standings });
   } catch (err) {
     return JSON.stringify({ error: String(err.message || err) });
   }
