@@ -1,0 +1,87 @@
+// Extractor de la Polla NFL (Splash Sports).
+// Se ejecuta DENTRO de una pestaña de *.splashsports.com con sesión iniciada
+// (usa la cookie accessToken de la sesión). Devuelve un JSON compacto en texto.
+(async () => {
+  const CONTEST = 'contest_01KZPQ5VY6JW7J8MD54KDN44M1';
+  const ENTRIES = {
+    'entry_01M0D750T6DCQTKTC9F5NEE8C2': 'Kvetchers',
+    'entry_01M0D73P3RM6TH90VAD4M6VRYV': 'KIBBEH',
+  };
+
+  const ck = document.cookie.split('; ').find(c => c.startsWith('accessToken='));
+  if (!ck) return JSON.stringify({ error: 'NOT_LOGGED_IN' });
+  const tok = decodeURIComponent(ck.split('=')[1]);
+  const get = async p => {
+    const r = await fetch('https://api.splashsports.com/contests-service-v2/api/' + p,
+      { headers: { Authorization: 'Bearer ' + tok } });
+    if (r.status === 401 || r.status === 403) throw new Error('AUTH ' + r.status);
+    if (!r.ok) throw new Error(p + ' -> ' + r.status);
+    return r.json();
+  };
+
+  try {
+    const now = Date.now();
+    const slates = (await get(`contests/slates?contestId=${CONTEST}&limit=25&offset=0`)).data;
+    // Semanas ya cerradas y guardadas en data.json: no se vuelven a bajar.
+    const skip = new Set(window.POLLA_SKIP || []);
+    const active = slates.filter(s => !(s.status === 'settled' && skip.has(s.name)) && (
+      s.status !== 'scheduled' || s.isCurrentSlate || new Date(s.windowStartDate).getTime() <= now));
+
+    // Piques de la cuenta con sesión iniciada (incluye piques aún no cerrados).
+    const mine = (await get(`my-entries?contestId=${CONTEST}&limit=20&offset=0&includePicks=true`)).data;
+    const openPicks = {}; // entryId -> gameId -> alias
+    for (const e of mine) {
+      if (!ENTRIES[e.id] || !e.picks) continue;
+      openPicks[e.id] = {};
+      for (const p of e.picks.picks) openPicks[e.id][p.game.id] = { t: p.pick.alias, g: p.grade };
+    }
+
+    const weeks = [];
+    for (const s of active) {
+      const base = `team-pickem/picksheets?contestId=${CONTEST}&slateId=${s.id}`;
+      const [sheet, stats, ...entrySheets] = await Promise.all([
+        get(base),
+        get(`team-pickem/statistics?contestId=${CONTEST}&slateId=${s.id}&offset=0&limit=25`).catch(() => ({ data: [] })),
+        ...Object.keys(ENTRIES).map(id => get(`${base}&entryId=${id}`)),
+      ]);
+      const dist = {}; // gameId -> alias -> {pct, n, auto}
+      for (const gs of stats.data || []) {
+        dist[gs.gameId] = {};
+        for (const p of gs.picks) dist[gs.gameId][p.team.alias] = { pct: p.picked.percent, n: p.picked.count, auto: p.autoPicked.count };
+      }
+      const games = sheet.data.games.map(gm => {
+        const idToAlias = { [gm.home.id]: gm.home.alias, [gm.away.id]: gm.away.alias };
+        const picks = {};
+        Object.keys(ENTRIES).forEach((id, i) => {
+          const eg = entrySheets[i].data.games.find(x => x.gameId === gm.gameId);
+          const p = eg && eg.picks && eg.picks[0];
+          if (p) picks[ENTRIES[id]] = { t: idToAlias[p.value] || p.value, g: p.grade || null, m: p.margin ?? null };
+          else if (openPicks[id] && openPicks[id][gm.gameId]) picks[ENTRIES[id]] = { t: openPicks[id][gm.gameId].t, g: openPicks[id][gm.gameId].g, m: null, open: true };
+        });
+        const team = t => ({ ab: t.alias, name: t.name, sc: t.score, sp: t.spread, rec: t.record ? `${t.record.wins}-${t.record.losses}${t.record.ties ? '-' + t.record.ties : ''}` : '' });
+        return {
+          id: gm.gameId, at: gm.startsAt, lockAt: gm.lockAt, st: gm.status, state: gm.state,
+          away: team(gm.away), home: team(gm.home), tb: gm.isTiebreakerGame, picks, dist: dist[gm.gameId] || null,
+        };
+      });
+      weeks.push({
+        n: s.name, status: s.status, current: s.isCurrentSlate, lock: s.pickLockDate,
+        start: s.startDate, end: s.endDate, games,
+      });
+    }
+
+    const standings = [];
+    let cur = null;
+    for (let i = 0; i < 10; i++) {
+      const lb = await get(`leaderboards?contestId=${CONTEST}&limit=50` + (cur ? `&cursor=${cur}` : ''));
+      for (const e of lb.data) standings.push({ r: e.rank, dr: e.displayRank, h: e.user.handle, w: e.metadata.record.wins, l: e.metadata.record.losses, t: e.metadata.record.ties || 0, me: !!ENTRIES[e.entry.id] });
+      cur = lb.nextCursor;
+      if (!cur) break;
+    }
+
+    const loggedAs = Object.keys(openPicks).map(id => ENTRIES[id]);
+    return JSON.stringify({ fetchedAt: new Date().toISOString(), contest: 'POLLA PANAMA 2026', loggedAs, entries: Object.values(ENTRIES), weeks, standings });
+  } catch (err) {
+    return JSON.stringify({ error: String(err.message || err) });
+  }
+})()

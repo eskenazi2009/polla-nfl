@@ -1,0 +1,557 @@
+<title>Polla Panamá 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#eef1f4; --surface:#fbfcfd; --raised:#ffffff;
+  --ink:#101a2b; --ink-2:#4a5566; --muted:#7a8595;
+  --line:#dbe1e8; --line-2:#c7cfd9;
+  --e1:#2a78d6; --e1-tint:rgba(42,120,214,.12);
+  --e2:#eb6834; --e2-tint:rgba(235,104,52,.13);
+  --won:#0ca30c; --won-ink:#006300; --won-tint:rgba(12,163,12,.13);
+  --lost:#d03b3b; --lost-ink:#b02a2a; --lost-tint:rgba(208,59,59,.12);
+  --push:#898781; --push-tint:rgba(137,135,129,.16);
+  --live:#c98500; --live-tint:rgba(237,161,0,.15);
+  --split:#4a3aa7;
+  --bar-bg:#e4e8ee;
+  --shadow:0 1px 2px rgba(16,26,43,.06),0 4px 16px rgba(16,26,43,.05);
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0b1018; --surface:#121925; --raised:#18212f;
+    --ink:#edf1f6; --ink-2:#b4bfcd; --muted:#8793a4;
+    --line:#233042; --line-2:#2f3e53;
+    --e1:#3987e5; --e1-tint:rgba(57,135,229,.2);
+    --e2:#d95926; --e2-tint:rgba(217,89,38,.22);
+    --won-ink:#3fc43f; --won-tint:rgba(12,163,12,.2);
+    --lost:#e05555; --lost-ink:#ef7a7a; --lost-tint:rgba(224,85,85,.2);
+    --push-tint:rgba(137,135,129,.22);
+    --live-tint:rgba(237,161,0,.2);
+    --split:#9085e9;
+    --bar-bg:#223044;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0b1018; --surface:#121925; --raised:#18212f;
+  --ink:#edf1f6; --ink-2:#b4bfcd; --muted:#8793a4;
+  --line:#233042; --line-2:#2f3e53;
+  --e1:#3987e5; --e1-tint:rgba(57,135,229,.2);
+  --e2:#d95926; --e2-tint:rgba(217,89,38,.22);
+  --won-ink:#3fc43f; --won-tint:rgba(12,163,12,.2);
+  --lost:#e05555; --lost-ink:#ef7a7a; --lost-tint:rgba(224,85,85,.2);
+  --push-tint:rgba(137,135,129,.22);
+  --live-tint:rgba(237,161,0,.2);
+  --split:#9085e9;
+  --bar-bg:#223044;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.45 var(--body);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.01em}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--e1);outline-offset:2px}
+
+/* Header */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+header.top h1{font-size:clamp(34px,6vw,52px);font-weight:700;line-height:.95;text-transform:uppercase}
+header.top .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right}
+.updated{color:var(--ink-2);font-size:13px}
+.lockchip{display:inline-flex;align-items:center;gap:8px;font:600 13px/1 var(--body);padding:7px 11px;border-radius:999px;background:var(--live-tint);color:var(--ink)}
+.lockchip .dot{width:8px;height:8px;border-radius:50%;background:var(--live)}
+.lockchip.locked{background:var(--bar-bg)}
+.lockchip.locked .dot{background:var(--muted)}
+
+/* Entry cards */
+.entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.entry{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:4px 20px;position:relative;overflow:hidden}
+.entry::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--c)}
+.entry .who{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+.entry .who h2{font-size:26px;font-weight:700}
+.entry .rank{font:700 64px/0.9 var(--display);color:var(--c)}
+.entry .rank small{display:block;font:500 13px/1.3 var(--body);color:var(--muted);margin-top:6px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;align-content:start}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font:600 22px/1.1 var(--display)}
+.stat .v.good{color:var(--won-ink)} .stat .v.bad{color:var(--lost-ink)}
+
+/* Section */
+section.block{display:flex;flex-direction:column;gap:14px}
+.block-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 20px}
+.block-head h2{font-size:30px;font-weight:700;text-transform:uppercase}
+.sub{color:var(--ink-2);font-size:14px}
+
+/* Controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;background:var(--bar-bg);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--raised);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg button:hover:not([aria-pressed="true"]){color:var(--ink)}
+.weekseg button{font-family:var(--display);font-size:15px;min-width:38px}
+
+.weeksum{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--ink-2)}
+.weeksum b{color:var(--ink);font-weight:600}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:0}
+
+/* Board */
+.board{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.bhead,.game{display:grid;grid-template-columns:92px minmax(230px,1.5fr) 118px 118px minmax(150px,1fr);gap:14px;align-items:center;padding:10px 16px}
+.bhead{font:600 11px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-block:11px}
+.bhead .e{display:flex;align-items:center}
+.game{border-bottom:1px solid var(--line);position:relative}
+.game:last-child{border-bottom:0}
+.game.split::after{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--split)}
+.when{font-size:12px;color:var(--muted);line-height:1.25}
+.when .st{display:block;font:600 12px/1.2 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.when .st.live{color:var(--live)}
+.matchup{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:14px}
+.team{display:flex;align-items:baseline;gap:8px;min-width:0}
+.team .ab{font:700 18px/1.15 var(--display);min-width:40px}
+.team .nm{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team .sp{font:600 13px/1 var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.team.loser .ab,.team.loser + .sc{color:var(--muted)}
+.sc{font:700 18px/1.15 var(--display);text-align:right;font-variant-numeric:tabular-nums}
+.tbtag{font:600 10px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line-2);border-radius:4px;padding:3px 5px;margin-left:4px}
+
+.pick{display:flex;align-items:center;gap:8px;border-radius:7px;padding:6px 9px;min-height:40px;background:var(--bar-bg);border:1px solid transparent}
+.pick .t{font:700 18px/1 var(--display)}
+.pick .s{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pick .r{margin-left:auto;font:700 12px/1 var(--body);letter-spacing:.04em}
+.pick.won{background:var(--won-tint)} .pick.won .r{color:var(--won-ink)}
+.pick.lost{background:var(--lost-tint)} .pick.lost .r{color:var(--lost-ink)}
+.pick.push{background:var(--push-tint)}
+.pick.pending{background:transparent;border-color:var(--line-2)}
+.pick.live-up{background:var(--won-tint);border-color:var(--live)} .pick.live-up .r{color:var(--won-ink)}
+.pick.live-down{background:var(--lost-tint);border-color:var(--live)} .pick.live-down .r{color:var(--lost-ink)}
+.pick.hidden{background:transparent;border:1px dashed var(--line-2);color:var(--muted);font-size:12px;line-height:1.2}
+.pick.none{background:transparent;color:var(--muted)}
+.mlabel{display:none}
+
+.dist{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
+.dist .bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:var(--surface)}
+.dist .bar i{display:block;height:100%;background:var(--line-2)}
+.dist .bar i:first-child{border-radius:4px 0 0 4px} .dist .bar i:last-child{border-radius:0 4px 4px 0}
+.dist .bar i.win{background:var(--won)}
+.dist .lbl{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+.dist .na{color:var(--muted);font-size:12px}
+.empty{padding:28px 16px;color:var(--muted);text-align:center}
+
+/* Charts */
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h3{font-size:21px;font-weight:700;text-transform:uppercase}
+.card .note{font-size:13px;color:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-2)}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+.chart .val{fill:var(--ink-2);font-weight:600}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{stroke:var(--line-2);stroke-width:1}
+.tip{position:fixed;pointer-events:none;background:var(--raised);color:var(--ink);border:1px solid var(--line-2);border-radius:6px;padding:7px 10px;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:10;max-width:240px}
+.vs table{width:100%;border-collapse:collapse;font-size:14px}
+.vs th{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+.vs th:first-child,.vs td:first-child{text-align:left}
+.vs td{padding:9px 4px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.vs tr:last-child td{border-bottom:0}
+
+/* Standings */
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow-x:auto}
+table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
+.std th{font:600 11px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+.std td{padding:8px 14px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.std tr:last-child td{border-bottom:0}
+.std .r{width:64px;color:var(--ink-2)}
+.std .rt{text-align:right}
+.std tr.me td{background:var(--c-tint);font-weight:600}
+.std tr.me td:first-child{box-shadow:inset 4px 0 0 var(--c)}
+.std tr.gap td{color:var(--muted);text-align:center;font-size:12px;padding:5px}
+.linkbtn{border:1px solid var(--line-2);background:var(--raised);border-radius:7px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.linkbtn:hover{border-color:var(--ink-2)}
+footer{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+footer a{color:var(--ink-2)}
+
+@media (max-width:760px){
+  .bhead{display:none}
+  .game{grid-template-columns:1fr 1fr;gap:8px 10px;padding:12px 14px}
+  .game .when{grid-column:1/-1;display:flex;gap:8px;align-items:baseline}
+  .game .when .st{display:inline}
+  .game .matchup{grid-column:1/-1}
+  .game .dist{grid-column:1/-1}
+  .mlabel{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .entry .rank{font-size:52px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .seg button{transition:background .15s,color .15s}
+}
+</style>
+
+<div class="wrap" id="app">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="eyebrow">Splash Sports · Pick'em contra el spread</div>
+      <h1 id="title">Polla Panamá 2026</h1>
+    </div>
+    <div class="meta">
+      <span class="lockchip" id="lockchip"><span class="dot"></span><span id="locktext"></span></span>
+      <span class="updated" id="updated"></span>
+    </div>
+  </header>
+
+  <div class="entries" id="entries"></div>
+
+  <section class="block" id="weekblock">
+    <div class="block-head">
+      <div>
+        <h2 id="weektitle">Semana</h2>
+        <div class="weeksum" id="weeksum"></div>
+      </div>
+      <div class="controls">
+        <div class="seg weekseg" id="weekseg" role="group" aria-label="Semana"></div>
+        <div class="seg" id="filterseg" role="group" aria-label="Filtro">
+          <button type="button" id="f-all" data-f="all" aria-pressed="true">Todos</button>
+          <button type="button" id="f-pend" data-f="pend" aria-pressed="false">Pendientes</button>
+          <button type="button" id="f-split" data-f="split" aria-pressed="false">Divididos</button>
+        </div>
+      </div>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><h2>Rendimiento</h2></div>
+    <div class="charts">
+      <div class="card">
+        <h3>Aciertos por semana</h3>
+        <div class="legend" id="leg1"></div>
+        <div class="chart" id="chWeeks"></div>
+      </div>
+      <div class="card">
+        <h3>Dónde están en la polla</h3>
+        <div class="note" id="histnote"></div>
+        <div class="chart" id="chHist"></div>
+      </div>
+      <div class="card vs">
+        <h3>Con o contra la polla</h3>
+        <div class="note">Récord cuando su pique coincidió con la mayoría de la polla, y cuando fue en contra.</div>
+        <div id="vsTable"></div>
+      </div>
+      <div class="card">
+        <h3>Posición en el tiempo</h3>
+        <div class="legend" id="leg2"></div>
+        <div class="chart" id="chRank"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Tabla</h2>
+      <button type="button" class="linkbtn" id="stdtoggle">Ver la tabla completa</button>
+    </div>
+    <div class="tablewrap"><table class="std" id="std"></table></div>
+  </section>
+
+  <footer>
+    <span id="foot"></span>
+    <a href="https://contests.app.splashsports.com/team-pickem/contests/contest_01KZPQ5VY6JW7J8MD54KDN44M1" target="_blank" rel="noopener">Abrir la polla en Splash</a>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = /*__POLLA_DATA__*/null;
+const TZ = 'America/Panama';
+const ENTRIES = DATA.entries;
+const ECOL = ['e1', 'e2'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const weekLabel = n => n.replace('Week', 'Semana');
+const weekNum = n => n.split(' ').pop();
+const fmt = (iso, opts) => new Intl.DateTimeFormat('es-PA', { timeZone: TZ, ...opts }).format(new Date(iso));
+const fmtDay = iso => fmt(iso, { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtTime = iso => fmt(iso, { hour: 'numeric', minute: '2-digit' });
+const spr = v => v == null ? '' : (v > 0 ? '+' + v : v === 0 ? 'PK' : String(v));
+const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
+const now = Date.now();
+
+function gameState(g) {
+  if (g.st === 'finalized' || g.st === 'closed' || g.st === 'complete') return 'final';
+  if (g.st === 'scheduled' || g.st === 'created') return new Date(g.at).getTime() > now ? 'sched' : 'live';
+  return 'live';
+}
+function teamOf(g, ab) { return g.away.ab === ab ? [g.away, g.home] : [g.home, g.away]; }
+function coverMargin(g, ab) { const [t, o] = teamOf(g, ab); return t.sc + t.sp - o.sc; }
+function pickResult(g, p) {
+  if (!p) return null;
+  const st = gameState(g);
+  if (p.g) return p.g === 'won' ? 'won' : p.g === 'lost' ? 'lost' : 'push';
+  if (st === 'final') { const m = coverMargin(g, p.t); return m > 0 ? 'won' : m < 0 ? 'lost' : 'push'; }
+  if (st === 'live') { const m = coverMargin(g, p.t); return m > 0 ? 'live-up' : m < 0 ? 'live-down' : 'live-even'; }
+  return 'pending';
+}
+function record(games, who) {
+  let w = 0, l = 0, p = 0, pend = 0;
+  for (const g of games) {
+    const r = pickResult(g, g.picks[who]);
+    if (r === 'won') w++; else if (r === 'lost') l++; else if (r === 'push') p++; else pend++;
+  }
+  return { w, l, p, pend };
+}
+const recStr = r => `${r.w}-${r.l}${r.p ? '-' + r.p : ''}`;
+
+/* Header */
+const weeks = DATA.weeks;
+const cur = weeks.find(w => w.current) || weeks[weeks.length - 1];
+$('updated').textContent = 'Actualizado ' + fmt(DATA.fetchedAt, { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
+(function lock() {
+  const t = new Date(cur.lock).getTime();
+  if (t > now) {
+    const h = Math.round((t - now) / 36e5);
+    $('locktext').textContent = `${weekLabel(cur.n)} · piques cierran ${fmtDay(cur.lock)} ${fmtTime(cur.lock)}` + (h < 48 ? ` (en ${h} h)` : '');
+  } else {
+    $('lockchip').classList.add('locked');
+    $('locktext').textContent = `${weekLabel(cur.n)} · piques cerrados`;
+  }
+})();
+
+/* Entry cards */
+const std = DATA.standings;
+const field = std.length;
+const leader = std[0];
+(function cards() {
+  const html = ENTRIES.map((who, i) => {
+    const s = std.find(x => x.h === who) || {};
+    const wk = record(cur.games, who);
+    const all = weeks.flatMap(w => w.games);
+    const tot = record(all, who);
+    const behind = leader ? leader.w - s.w : 0;
+    const top10 = std[9] ? std[9].w - s.w : 0;
+    return `<article class="entry" style="--c:var(--${ECOL[i]})">
+      <div class="who"><h2>${esc(who)}</h2></div>
+      <div class="rank num">${esc(s.dr || '–')}<small>de ${field} en la polla</small></div>
+      <div class="stats">
+        <div class="stat"><div class="k">Récord ATS</div><div class="v num">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</div></div>
+        <div class="stat"><div class="k">% acierto</div><div class="v num">${pct(s.w, s.w + s.l)}</div></div>
+        <div class="stat"><div class="k">${weekLabel(cur.n)}</div><div class="v num">${recStr(wk)}${wk.pend ? ` <span style="font:500 13px var(--body);color:var(--muted)">· ${wk.pend} por jugar</span>` : ''}</div></div>
+        <div class="stat"><div class="k">Del líder / del top 10</div><div class="v num ${behind > 0 ? 'bad' : 'good'}">${behind > 0 ? '−' + behind : 'Líder'} <span style="color:var(--muted);font-weight:500">/</span> ${top10 > 0 ? '−' + top10 : top10 === 0 ? '0' : '+' + (-top10)}</div></div>
+      </div>
+    </article>`;
+  }).join('');
+  $('entries').innerHTML = html;
+})();
+
+/* Week board */
+let selWeek = cur.n;
+let filter = 'all';
+try { const f = localStorage.getItem('polla-filter'); if (f) filter = f; } catch (e) {}
+
+function renderWeekSeg() {
+  $('weekseg').innerHTML = weeks.map(w =>
+    `<button type="button" id="wk-${weekNum(w.n)}" data-w="${esc(w.n)}" aria-pressed="${w.n === selWeek}" title="${esc(weekLabel(w.n))}">S${weekNum(w.n)}</button>`).join('');
+  document.querySelectorAll('#filterseg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === filter));
+}
+function pickCell(g, who, i) {
+  const p = g.picks[who];
+  const label = `<span class="mlabel"><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(who)}</span>`;
+  const locked = new Date(g.lockAt).getTime() <= now;
+  if (!p) {
+    if (!locked) return `<div>${label}<div class="pick hidden">Se ve al cerrar</div></div>`;
+    return `<div>${label}<div class="pick none">Sin pique</div></div>`;
+  }
+  const r = pickResult(g, p);
+  const [t] = teamOf(g, p.t);
+  const rtxt = { won: 'GANÓ', lost: 'PERDIÓ', push: 'PUSH', 'live-up': 'CUBRE', 'live-down': 'NO CUBRE', 'live-even': 'EMPATE', pending: '' }[r];
+  const cls = r === 'live-even' ? 'push' : r;
+  return `<div>${label}<div class="pick ${cls}" style="box-shadow:inset 3px 0 0 var(--${ECOL[i]})"><span class="t">${esc(p.t)}</span><span class="s">${spr(t.sp)}</span><span class="r">${rtxt}</span></div></div>`;
+}
+function distCell(g) {
+  if (!g.dist) return `<div class="dist"><span class="na">Distribución visible al cerrar</span></div>`;
+  const a = g.dist[g.away.ab] || { pct: 0 }, h = g.dist[g.home.ab] || { pct: 0 };
+  const st = gameState(g);
+  let winAb = null;
+  if (st === 'final') { const m = coverMargin(g, g.away.ab); winAb = m > 0 ? g.away.ab : m < 0 ? g.home.ab : null; }
+  return `<div class="dist" title="${esc(g.away.ab)} ${a.pct}% (${a.n || 0}) · ${esc(g.home.ab)} ${h.pct}% (${h.n || 0})">
+    <div class="lbl"><span>${esc(g.away.ab)} ${Math.round(a.pct)}%</span><span>${Math.round(h.pct)}% ${esc(g.home.ab)}</span></div>
+    <div class="bar"><i class="${winAb === g.away.ab ? 'win' : ''}" style="width:${a.pct}%"></i><i class="${winAb === g.home.ab ? 'win' : ''}" style="width:${h.pct}%"></i></div>
+  </div>`;
+}
+function teamRow(g, t, o, st) {
+  const loser = st === 'final' && t.sc < o.sc;
+  const showSc = st !== 'sched';
+  return `<div class="team ${loser ? 'loser' : ''}"><span class="ab">${esc(t.ab)}</span><span class="nm">${esc(t.name)}</span><span class="sp">${spr(t.sp)}</span></div><div class="sc">${showSc ? t.sc : ''}</div>`;
+}
+function renderBoard() {
+  const wk = weeks.find(w => w.n === selWeek);
+  $('weektitle').textContent = weekLabel(wk.n);
+  const games = wk.games;
+  const isSplit = g => { const ps = ENTRIES.map(e => g.picks[e]?.t); return ps.every(Boolean) && new Set(ps).size > 1; };
+  const same = games.filter(g => ENTRIES.every(e => g.picks[e]) && !isSplit(g)).length;
+  const known = games.filter(g => ENTRIES.every(e => g.picks[e])).length;
+  $('weeksum').innerHTML = ENTRIES.map((e, i) => { const r = record(games, e); return `<span><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)} <b class="num">${recStr(r)}</b></span>`; }).join('') +
+    `<span>Coinciden en <b class="num">${same}</b> de ${known}${known < games.length ? ` <span style="color:var(--muted)">(${games.length - known} aún ocultos)</span>` : ''}</span>`;
+  let list = games;
+  if (filter === 'pend') list = games.filter(g => gameState(g) !== 'final');
+  if (filter === 'split') list = games.filter(isSplit);
+  const head = `<div class="bhead"><span>Hora</span><span>Partido · spread</span>${ENTRIES.map((e, i) => `<span class="e"><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</span>`).join('')}<span>Pique de la polla</span></div>`;
+  if (!list.length) { $('board').innerHTML = head + `<div class="empty">${filter === 'pend' ? 'No quedan partidos por jugar en esta semana.' : 'Esta semana no hay partidos donde las dos cuentas escogieron distinto.'}</div>`; return; }
+  $('board').innerHTML = head + list.map(g => {
+    const st = gameState(g);
+    const stTxt = st === 'final' ? 'Final' : st === 'live' ? 'En vivo' : fmtTime(g.at);
+    return `<div class="game ${isSplit(g) ? 'split' : ''}">
+      <div class="when"><span class="st ${st === 'live' ? 'live' : ''}">${stTxt}</span>${fmtDay(g.at)}</div>
+      <div class="matchup">${teamRow(g, g.away, g.home, st)}${teamRow(g, g.home, g.away, st).replace('</span></div>', '</span>' + (g.tb ? '<span class="tbtag">Desempate</span>' : '') + '</div>')}</div>
+      ${ENTRIES.map((e, i) => pickCell(g, e, i)).join('')}
+      ${distCell(g)}
+    </div>`;
+  }).join('');
+}
+$('weekseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; selWeek = b.dataset.w; renderWeekSeg(); renderBoard(); });
+$('filterseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; try { localStorage.setItem('polla-filter', filter); } catch (err) {} renderWeekSeg(); renderBoard(); });
+renderWeekSeg(); renderBoard();
+
+/* Tooltip */
+const tip = $('tip');
+function showTip(ev, html) { tip.innerHTML = html; tip.hidden = false; const x = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8); tip.style.left = x + 'px'; tip.style.top = (ev.clientY + 14) + 'px'; }
+function hideTip() { tip.hidden = true; }
+function bindTips(root) {
+  root.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('mousemove', ev => showTip(ev, el.dataset.tip));
+    el.addEventListener('mouseleave', hideTip);
+  });
+}
+const legend = () => ENTRIES.map((e, i) => `<span><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</span>`).join('');
+$('leg1').innerHTML = legend(); $('leg2').innerHTML = legend();
+
+/* Chart: wins per week (grouped bars) */
+(function weeksChart() {
+  const W = 520, H = 220, m = { l: 28, r: 8, t: 18, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const max = Math.max(16, ...weeks.map(w => w.games.length));
+  const y = v => m.t + ih - v / max * ih;
+  const gw = iw / weeks.length, bw = Math.min(26, (gw - 14) / 2);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Aciertos por semana de cada cuenta">`;
+  for (const v of [0, 4, 8, 12, 16]) s += `<line class="${v ? 'grid' : 'axis'}" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  weeks.forEach((w, wi) => {
+    const cx = m.l + gw * wi + gw / 2;
+    ENTRIES.forEach((e, i) => {
+      const r = record(w.games, e);
+      const x = cx - bw - 1 + i * (bw + 2);
+      const h = Math.max(0, y(0) - y(r.w));
+      const tipTxt = `<b>${esc(e)}</b> · ${esc(weekLabel(w.n))}<br>${recStr(r)} ATS${r.pend ? ` · ${r.pend} por jugar` : ''}`;
+      s += `<path d="M${x},${y(0)} v${-Math.max(h - 4, 0)} q0,-4 4,-4 h${bw - 8} q4,0 4,4 v${Math.max(h - 4, 0)} z" fill="var(--${ECOL[i]})" data-tip="${esc(tipTxt)}"/>`;
+      s += `<text class="val" x="${x + bw / 2}" y="${y(r.w) - 5}" text-anchor="middle">${r.w}</text>`;
+    });
+    s += `<text x="${cx}" y="${H - 8}" text-anchor="middle">S${weekNum(w.n)}${w.status !== 'settled' ? '*' : ''}</text>`;
+  });
+  s += `</svg>`;
+  $('chWeeks').innerHTML = s + (weeks.some(w => w.status !== 'settled') ? `<div class="note">* semana en curso</div>` : '');
+  bindTips($('chWeeks'));
+})();
+
+/* Chart: histogram of wins across the pool */
+(function hist() {
+  const counts = {}; std.forEach(s => counts[s.w] = (counts[s.w] || 0) + 1);
+  const ws = std.map(s => s.w); const lo = Math.min(...ws), hi = Math.max(...ws);
+  const W = 520, H = 220, m = { l: 28, r: 8, t: 30, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const maxC = Math.max(...Object.values(counts));
+  const n = hi - lo + 1, bw = iw / n;
+  const y = v => m.t + ih - v / maxC * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Distribución de victorias en la polla">`;
+  const step = maxC > 12 ? 5 : 2;
+  for (let v = 0; v <= maxC; v += step) s += `<line class="${v ? 'grid' : 'axis'}" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  for (let w = lo; w <= hi; w++) {
+    const c = counts[w] || 0; const x = m.l + (w - lo) * bw + 1;
+    const mine = ENTRIES.map((e, i) => std.find(s => s.h === e && s.w === w) ? i : -1).filter(i => i >= 0);
+    const fill = mine.length ? `var(--${ECOL[mine[0]]})` : 'var(--line-2)';
+    if (c) s += `<rect x="${x}" y="${y(c)}" width="${bw - 2}" height="${y(0) - y(c)}" rx="3" fill="${fill}" data-tip="${esc(`<b>${w} victorias</b><br>${c} participante${c > 1 ? 's' : ''}` + (mine.length ? `<br>Incluye a ${mine.map(i => ENTRIES[i]).join(' y ')}` : ''))}"/>`;
+    if (mine.length) mine.forEach((i, k) => { s += `<text class="val" x="${x + (bw - 2) / 2}" y="${y(c) - 8 - k * 13}" text-anchor="middle" style="fill:var(--${ECOL[i]})">${esc(ENTRIES[i])}</text>`; });
+    s += `<text x="${x + (bw - 2) / 2}" y="${H - 8}" text-anchor="middle">${w}</text>`;
+  }
+  s += `</svg>`;
+  $('chHist').innerHTML = s;
+  const median = [...ws].sort((a, b) => a - b)[Math.floor(ws.length / 2)];
+  $('histnote').textContent = `Victorias ATS de los ${field} participantes. Líder: ${leader.h} con ${leader.w}. Mediana: ${median}.`;
+  bindTips($('chHist'));
+})();
+
+/* With vs against the pool */
+(function vs() {
+  const rows = ENTRIES.map((e, i) => {
+    const withR = { w: 0, l: 0 }, agR = { w: 0, l: 0 };
+    for (const w of weeks) for (const g of w.games) {
+      const p = g.picks[e]; if (!p || !g.dist) continue;
+      const r = pickResult(g, p); if (r !== 'won' && r !== 'lost') continue;
+      const other = p.t === g.away.ab ? g.home.ab : g.away.ab;
+      const mine = g.dist[p.t]?.pct ?? 0, theirs = g.dist[other]?.pct ?? 0;
+      const bucket = mine >= theirs ? withR : agR;
+      bucket[r === 'won' ? 'w' : 'l']++;
+    }
+    return `<tr><td><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</td><td>${withR.w}-${withR.l} <span style="color:var(--muted)">${pct(withR.w, withR.w + withR.l)}</span></td><td>${agR.w}-${agR.l} <span style="color:var(--muted)">${pct(agR.w, agR.w + agR.l)}</span></td></tr>`;
+  }).join('');
+  $('vsTable').innerHTML = `<table><thead><tr><th>Cuenta</th><th>Con la mayoría</th><th>Contra la mayoría</th></tr></thead><tbody>${rows}</tbody></table>`;
+})();
+
+/* Rank over time */
+(function rankChart() {
+  const hist = DATA.history || [];
+  if (hist.length < 2) {
+    const h = hist[0];
+    $('chRank').innerHTML = `<div class="note">El historial se llena solo con cada actualización. Primera foto${h ? ' del ' + esc(h.d) : ''}: ` +
+      ENTRIES.map(e => h && h[e] ? `${esc(e)} ${esc(h[e].dr)}` : '').filter(Boolean).join(', ') + '.</div>';
+    return;
+  }
+  const W = 520, H = 220, m = { l: 34, r: 12, t: 12, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const fieldN = Math.max(...hist.map(h => h.field || field));
+  const y = r => m.t + (r - 1) / (fieldN - 1) * ih;
+  const x = i => m.l + (hist.length === 1 ? iw / 2 : i / (hist.length - 1) * iw);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Posición en la tabla por fecha">`;
+  const ticks = [1, 25, 50, 75, fieldN].filter((v, i, a) => v <= fieldN && a.indexOf(v) === i);
+  for (const v of ticks) s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  const every = Math.ceil(hist.length / 6);
+  hist.forEach((h, i) => { if (i % every === 0 || i === hist.length - 1) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(h.d.slice(5))}</text>`; });
+  ENTRIES.forEach((e, k) => {
+    const pts = hist.map((h, i) => h[e] ? [x(i), y(h[e].r), h] : null).filter(Boolean);
+    s += `<polyline fill="none" stroke="var(--${ECOL[k]})" stroke-width="2" stroke-linejoin="round" points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}"/>`;
+    pts.forEach((p, j) => { s += `<circle cx="${p[0]}" cy="${p[1]}" r="${j === pts.length - 1 ? 5 : 3.5}" fill="var(--${ECOL[k]})" stroke="var(--surface)" stroke-width="2" data-tip="${esc(`<b>${e}</b> · ${p[2].d}<br>Puesto ${p[2][e].dr} · ${p[2][e].w}-${p[2][e].l}`)}"/>`; });
+  });
+  s += `</svg>`;
+  $('chRank').innerHTML = s + `<div class="note">Arriba es mejor (puesto 1).</div>`;
+  bindTips($('chRank'));
+})();
+
+/* Standings */
+let showAll = false;
+function renderStd() {
+  const mineIdx = std.map((s, i) => s.me ? i : -1).filter(i => i >= 0);
+  const keep = new Set();
+  if (showAll) std.forEach((_, i) => keep.add(i));
+  else {
+    for (let i = 0; i < Math.min(10, std.length); i++) keep.add(i);
+    mineIdx.forEach(i => { for (let j = i - 2; j <= i + 2; j++) if (j >= 0 && j < std.length) keep.add(j); });
+  }
+  let rows = '', prev = -1;
+  std.forEach((s, i) => {
+    if (!keep.has(i)) return;
+    if (prev >= 0 && i - prev > 1) rows += `<tr class="gap"><td colspan="4">· · ·</td></tr>`;
+    prev = i;
+    const ei = ENTRIES.indexOf(s.h);
+    rows += `<tr class="${s.me ? 'me' : ''}" ${ei >= 0 ? `style="--c:var(--${ECOL[ei]});--c-tint:var(--${ECOL[ei]}-tint)"` : ''}><td class="r">${esc(s.dr)}</td><td>${esc(s.h)}</td><td class="rt">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="rt">${pct(s.w, s.w + s.l)}</td></tr>`;
+  });
+  $('std').innerHTML = `<thead><tr><th>Puesto</th><th>Participante</th><th class="rt">Récord</th><th class="rt">%</th></tr></thead><tbody>${rows}</tbody>`;
+  $('stdtoggle').textContent = showAll ? 'Ver solo el resumen' : `Ver la tabla completa (${field})`;
+}
+$('stdtoggle').addEventListener('click', () => { showAll = !showAll; renderStd(); });
+renderStd();
+
+$('foot').textContent = `Datos de Splash Sports · ${field} participantes · se actualiza automáticamente`;
+</script>
