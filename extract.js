@@ -7,6 +7,16 @@
     'entry_01M0D750T6DCQTKTC9F5NEE8C2': 'Kvetchers',
     'entry_01M0D73P3RM6TH90VAD4M6VRYV': 'KIBBEH',
   };
+  // Cuál cuenta corresponde a cada userId (para etiquetar los survivor "solo mis picks").
+  const ACCT_BY_UID = {
+    'fa45a33b-33fb-4c0c-8c29-6ce833a95e6d': 'Kvetchers',
+    '14a8ce64-866c-4b10-b8af-04b067b5a348': 'KIBBEH',
+  };
+  // Survivors a incluir (solo mis entradas). pickMode se lee del picksheet.
+  const SURVIVORS = [
+    { id: 'contest_01KZ96TR6DJDDQV57SRJT0EDF2', name: 'Super Survivor Betcris', short: 'Survivor' },
+    { id: 'contest_01KZPRD4798HZ593H9QBWCWR0T', name: 'Polla Homicida', short: 'Homicida' },
+  ];
 
   const ck = document.cookie.split('; ').find(c => c.startsWith('accessToken='));
   if (!ck) return JSON.stringify({ error: 'NOT_LOGGED_IN' });
@@ -18,6 +28,7 @@
     if (!r.ok) throw new Error(p + ' -> ' + r.status);
     return r.json();
   };
+  const team = t => t ? ({ ab: t.alias, name: t.name, sc: t.score, sp: t.spread }) : null;
   // Ejecuta las promesas en tandas para no saturar el API.
   const pool = async (items, size, fn) => {
     const out = [];
@@ -104,8 +115,55 @@
       allPicks[s.name] = { gids, p };
     }
 
+    // ---- Survivors: solo MIS entradas de la cuenta con sesión iniciada ----
+    const myUid = (mine[0] && mine[0].userId) || null;
+    const acct = ACCT_BY_UID[myUid] || 'Cuenta';
+    const survivors = [];
+    for (const sv of SURVIVORS) {
+      const slates = (await get(`contests/slates?contestId=${sv.id}&limit=25&offset=0`)).data;
+      const svActive = slates.filter(s => s.status !== 'scheduled');
+      const gameById = {}; let pickMode = null; let deadline = null;
+      for (const s of svActive) {
+        const ps = await get(`team-survivor/picksheets?contestId=${sv.id}&slateId=${s.id}`);
+        pickMode = pickMode || ps.data.pickMode;
+        for (const gm of ps.data.games) gameById[gm.gameId] = { week: s.name, home: team(gm.home), away: team(gm.away), st: gm.status, at: gm.startsAt };
+      }
+      const slateById = Object.fromEntries(slates.map(s => [s.id, s.name]));
+      const myEnts = (await get(`my-entries?contestId=${sv.id}&limit=20&offset=0&includePicks=true`)).data;
+      const entries = myEnts.map(e => {
+        const picks = {};
+        for (const sl of (e.picks && e.picks.slates) || []) {
+          const p = sl.picks && sl.picks[0];
+          const wk = slateById[sl.slateId];
+          if (!p || !wk) continue;
+          const g = gameById[p.gameId];
+          const t = p.team ? p.team.alias : null;
+          let opp = null, ts = null, os = null, st = null;
+          if (g && g.home && g.away) {
+            const mine = g.home.ab === t ? g.home : g.away, oth = g.home.ab === t ? g.away : g.home;
+            opp = oth.ab; ts = mine.sc; os = oth.sc; st = g.st;
+          }
+          picks[wk] = { t, opp, ts, os, st, g: p.grade || null, missed: !!p.isMissedPick };
+        }
+        return {
+          acct, order: e.order,
+          alive: !!(e.state && e.state.alive),
+          lives: e.state ? e.state.livesRemaining : null,
+          elimWeek: e.state && e.state.eliminatedSlateId ? slateById[e.state.eliminatedSlateId] : null,
+          picks,
+        };
+      });
+      const nextSlate = slates.find(s => s.status !== 'settled');
+      survivors.push({
+        id: sv.id, name: sv.name, short: sv.short, pickMode,
+        lock: nextSlate ? nextSlate.pickLockDate : null,
+        curWeek: nextSlate ? nextSlate.name : null,
+        entries,
+      });
+    }
+
     const loggedAs = Object.keys(openPicks).map(id => ENTRIES[id]);
-    return JSON.stringify({ fetchedAt: new Date().toISOString(), contest: 'POLLA PANAMA 2026', loggedAs, entries: Object.values(ENTRIES), weeks, allPicks, standings });
+    return JSON.stringify({ fetchedAt: new Date().toISOString(), contest: 'POLLA PANAMA 2026', loggedAs, acct, entries: Object.values(ENTRIES), weeks, allPicks, standings, survivors });
   } catch (err) {
     return JSON.stringify({ error: String(err.message || err) });
   }

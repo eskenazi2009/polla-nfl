@@ -75,6 +75,18 @@ def main():
     for wk, val in snap.get("allPicks", {}).items():
         store["allPicks"][wk] = val
 
+    # Survivors: meta/juegos se sobreescriben; las entradas se mezclan por cuenta,
+    # para conservar las de la otra cuenta capturada en otra corrida.
+    sv_store = {s["id"]: s for s in store.get("survivors", [])}
+    for sv in snap.get("survivors", []):
+        prev = sv_store.get(sv["id"])
+        others = [e for e in (prev["entries"] if prev else []) if e.get("acct") not in {e2.get("acct") for e2 in sv["entries"]}]
+        merged = dict(sv)
+        merged["entries"] = sorted(others + sv["entries"], key=lambda e: (e.get("acct", ""), e.get("order", 0)))
+        sv_store[sv["id"]] = merged
+    if sv_store:
+        store["survivors"] = list(sv_store.values())
+
     # Historial: una foto por día (hora de Panamá) con puesto y récord de cada cuenta.
     day = datetime.fromisoformat(fetched.replace("Z", "+00:00")).astimezone(PANAMA).date().isoformat()
     point = {"d": day, "field": len(snap["standings"])}

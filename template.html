@@ -192,6 +192,31 @@ table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
 .pl .pk.wait{border-style:dashed} .pl .pk.wait .ch{color:var(--muted);font-size:12px}
 .pl .pk.none .ch{color:var(--muted)}
 .pl-empty{padding:14px 16px;color:var(--muted);font-size:13px}
+/* Survivors */
+.svcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.svhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.svhead h3{font:700 22px/1 var(--display);text-transform:uppercase}
+.svhead .rule{font-size:12px;color:var(--muted)}
+.svhead .rule b{color:var(--ink-2);font-weight:600}
+.sventry{border-top:1px solid var(--line);padding-top:11px;display:flex;flex-direction:column;gap:8px}
+.sventry:first-of-type{border-top:0;padding-top:0}
+.sventry .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sventry .who2{font:600 14px/1 var(--body)}
+.chip{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--body);padding:4px 8px;border-radius:999px}
+.chip.alive{background:var(--won-tint);color:var(--won-ink)}
+.chip.dead{background:var(--lost-tint);color:var(--lost-ink)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.svrec{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.svweeks{display:flex;gap:6px;flex-wrap:wrap}
+.svw{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px;padding:6px 4px;border-radius:7px;background:var(--bar-bg);border:1px solid transparent}
+.svw .wk{font:600 9px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.svw .tm{font:700 15px/1 var(--display)}
+.svw .sc{font:500 10px/1 var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.svw.won{background:var(--won-tint)} .svw.won .tm{color:var(--won-ink)}
+.svw.lost{background:var(--lost-tint)} .svw.lost .tm{color:var(--lost-ink)}
+.svw.pending{background:transparent;border-color:var(--line-2)} .svw.pending .tm{color:var(--ink)}
+.svw.missed{background:var(--lost-tint)} .svw.missed .tm{color:var(--lost-ink);font-size:11px}
+.svw.dim{opacity:.5}
 .linkbtn{border:1px solid var(--line-2);background:var(--raised);border-radius:7px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
 .linkbtn:hover{border-color:var(--ink-2)}
 footer{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
@@ -241,6 +266,16 @@ footer a{color:var(--ink-2)}
       </div>
     </div>
     <div class="board" id="board"></div>
+  </section>
+
+  <section class="block" id="survblock" hidden>
+    <div class="block-head">
+      <div>
+        <h2>Survivors</h2>
+        <div class="sub">Solo tus entradas. En cada semana escoges un equipo; si falla, esa entrada muere.</div>
+      </div>
+    </div>
+    <div class="charts" id="survivors"></div>
   </section>
 
   <section class="block">
@@ -473,6 +508,48 @@ function renderStd() {
 $('std').addEventListener('click', e => { const tr = e.target.closest('tr.part'); if (!tr) return; const h = tr.dataset.h; if (open.has(h)) open.delete(h); else open.add(h); renderStd(); });
 $('stdtoggle').addEventListener('click', () => { showAll = !showAll; renderStd(); });
 renderStd();
+
+/* Survivors */
+(function survivors() {
+  const svs = DATA.survivors || [];
+  if (!svs.length) return;
+  $('survblock').hidden = false;
+  const weekNo = w => parseInt(w.split(' ').pop(), 10);
+  const rule = m => m === 'pick_loser'
+    ? 'Escoge un equipo que <b>pierda</b> cada semana, sin repetir.'
+    : 'Escoge un equipo que <b>gane</b> cada semana, sin repetir.';
+  const html = svs.map(sv => {
+    const alive = sv.entries.filter(e => e.alive).length;
+    const entries = [...sv.entries].sort((a, b) => (a.acct || '').localeCompare(b.acct || '') || a.order - b.order);
+    const rows = entries.map(e => {
+      const weeks = Object.keys(e.picks).sort((a, b) => weekNo(a) - weekNo(b));
+      const cells = weeks.map(w => {
+        const p = e.picks[w];
+        let cls = 'pending', label = p.t || '—', sc = '';
+        if (p.missed) { cls = 'missed'; label = 'Sin pick'; }
+        else if (p.g === 'won') cls = 'won';
+        else if (p.g === 'lost') cls = 'lost';
+        if (p.st === 'finalized' && p.ts != null && (p.ts || p.os)) sc = `${p.ts}-${p.os}`;
+        const dead = !e.alive && weekNo(w) > (e.elimWeek ? weekNo(e.elimWeek) : 99);
+        const tip = `${w}${p.opp ? ' · ' + (p.t || '?') + ' vs ' + p.opp : ''}${sc ? ' (' + sc + ')' : ''}`;
+        return `<div class="svw ${cls} ${dead ? 'dim' : ''}" title="${esc(tip)}"><span class="wk">S${weekNo(w)}</span><span class="tm">${esc(label)}</span><span class="sc">${esc(p.opp ? 'vs ' + p.opp : '')}</span></div>`;
+      }).join('');
+      const status = e.alive
+        ? `<span class="chip alive"><span class="dot"></span>Vivo${e.lives > 1 ? ' · ' + e.lives + ' vidas' : ''}</span>`
+        : `<span class="chip dead"><span class="dot"></span>Eliminado${e.elimWeek ? ' · Sem ' + weekNo(e.elimWeek) : ''}</span>`;
+      return `<div class="sventry">
+        <div class="top"><span class="who2">${esc(e.acct)} #${e.order}</span>${status}<span class="svrec">${weeks.length} sem</span></div>
+        <div class="svweeks">${cells}</div>
+      </div>`;
+    }).join('');
+    return `<div class="svcard">
+      <div class="svhead"><h3>${esc(sv.short)}</h3><span class="rule">${rule(sv.pickMode)}</span></div>
+      <div class="sub">${esc(sv.name)} · <b>${alive}</b> de ${sv.entries.length} ${alive === 1 ? 'entrada viva' : 'entradas vivas'}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+  $('survivors').innerHTML = html;
+})();
 
 $('foot').textContent = `Datos de Splash Sports · ${field} participantes · se actualiza automáticamente`;
 </script>
