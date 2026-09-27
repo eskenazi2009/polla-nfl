@@ -198,6 +198,16 @@ table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
 .svhead h3{font:700 22px/1 var(--display);text-transform:uppercase}
 .svhead .rule{font-size:12px;color:var(--muted)}
 .svhead .rule b{color:var(--ink-2);font-weight:600}
+.svtop{background:var(--bar-bg);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.svtop .lbl{font:600 11px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.svtop .lbl b{color:var(--ink-2)}
+.svtop .row{display:flex;gap:8px;flex-wrap:wrap}
+.svtop .fade{color:var(--muted);font-size:12px}
+.topteam{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 10px}
+.topteam .rk{font:700 11px/1 var(--display);color:var(--muted);width:14px}
+.topteam .ab{font:700 16px/1 var(--display)}
+.topteam .n{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.topteam .n b{color:var(--ink);font-weight:700}
 .sventry{border-top:1px solid var(--line);padding-top:11px;display:flex;flex-direction:column;gap:8px}
 .sventry:first-of-type{border-top:0;padding-top:0}
 .sventry .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -542,9 +552,24 @@ renderStd();
         <div class="svweeks">${cells}</div>
       </div>`;
     }).join('');
+    const verb = sv.pickMode === 'pick_loser' ? 'pierda' : 'gane';
+    let top = '';
+    if (sv.topPicks && sv.topPicks.teams && sv.topPicks.teams.length) {
+      const tp = sv.topPicks;
+      const chips = tp.teams.slice(0, 3).map((t, i) =>
+        `<div class="topteam"><span class="rk">${i + 1}</span><span class="ab">${esc(t.ab)}</span><span class="n"><b>${t.n}</b> · ${t.pct}%</span></div>`).join('');
+      top = `<div class="svtop">
+        <div class="lbl">Más escogidos · <b>${esc(weekLabel(tp.week))}</b>${tp.settled ? '' : ' · se completa al cerrar'}</div>
+        <div class="row">${chips}</div>
+        <div class="fade">Reman en contra: escoge equipos distintos a estos para que un mal domingo no te tumbe con la mayoría.</div>
+      </div>`;
+    } else if (sv.entries.some(e => e.alive)) {
+      top = `<div class="svtop"><div class="lbl">Más escogidos · ${esc(weekLabel(sv.curWeek || ''))}</div><div class="fade">Se revela cuando cierran los piques de la semana.</div></div>`;
+    }
     return `<div class="svcard">
       <div class="svhead"><h3>${esc(sv.short)}</h3><span class="rule">${rule(sv.pickMode)}</span></div>
       <div class="sub">${esc(sv.name)} · <b>${alive}</b> de ${sv.entries.length} ${alive === 1 ? 'entrada viva' : 'entradas vivas'}</div>
+      ${top}
       ${rows}
     </div>`;
   }).join('');

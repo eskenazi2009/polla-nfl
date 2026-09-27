@@ -154,11 +154,24 @@
         };
       });
       const nextSlate = slates.find(s => s.status !== 'settled');
+      // Equipos más escogidos de la semana en curso (se revelan al cerrar cada juego).
+      let topPicks = null;
+      const curSlate = slates.find(s => s.isCurrentSlate) || slates.find(s => s.status === 'in_progress');
+      if (curSlate) {
+        try {
+          const st = await get(`team-survivor/statistics?contestId=${sv.id}&slateId=${curSlate.id}&offset=0&limit=40`);
+          const teams = (st.data || [])
+            .map(x => ({ ab: x.team.alias, n: x.picked ? x.picked.count : 0, pct: x.picked ? x.picked.percent : 0 }))
+            .filter(t => t.n > 0)
+            .sort((a, b) => b.n - a.n);
+          topPicks = { week: curSlate.name, settled: curSlate.status === 'settled', teams: teams.slice(0, 5) };
+        } catch (e) { /* sin acceso a stats: se queda null */ }
+      }
       survivors.push({
         id: sv.id, name: sv.name, short: sv.short, pickMode,
         lock: nextSlate ? nextSlate.pickLockDate : null,
         curWeek: nextSlate ? nextSlate.name : null,
-        entries,
+        topPicks, entries,
       });
     }
 

@@ -83,6 +83,9 @@ def main():
         others = [e for e in (prev["entries"] if prev else []) if e.get("acct") not in {e2.get("acct") for e2 in sv["entries"]}]
         merged = dict(sv)
         merged["entries"] = sorted(others + sv["entries"], key=lambda e: (e.get("acct", ""), e.get("order", 0)))
+        # Conservar el top de la otra cuenta si esta corrida no pudo leer las stats.
+        if not merged.get("topPicks") and prev and prev.get("topPicks"):
+            merged["topPicks"] = prev["topPicks"]
         sv_store[sv["id"]] = merged
     if sv_store:
         store["survivors"] = list(sv_store.values())
