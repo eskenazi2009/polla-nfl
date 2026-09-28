@@ -18,6 +18,7 @@
   --e2:#eb6834; --e2-tint:rgba(235,104,52,.13);
   --won:#0ca30c; --won-ink:#006300; --won-tint:rgba(12,163,12,.13);
   --lost:#d03b3b; --lost-ink:#b02a2a; --lost-tint:rgba(208,59,59,.12);
+  --won-cell:#cdeccd; --lost-cell:#f6d2d2;
   --push:#898781; --push-tint:rgba(137,135,129,.16);
   --live:#c98500; --live-tint:rgba(237,161,0,.15);
   --split:#4a3aa7;
@@ -36,6 +37,7 @@
     --e2:#d95926; --e2-tint:rgba(217,89,38,.22);
     --won-ink:#3fc43f; --won-tint:rgba(12,163,12,.2);
     --lost:#e05555; --lost-ink:#ef7a7a; --lost-tint:rgba(224,85,85,.2);
+    --won-cell:#1d4a24; --lost-cell:#5a2226;
     --push-tint:rgba(137,135,129,.22);
     --live-tint:rgba(237,161,0,.2);
     --split:#9085e9;
@@ -52,6 +54,7 @@
   --e2:#d95926; --e2-tint:rgba(217,89,38,.22);
   --won-ink:#3fc43f; --won-tint:rgba(12,163,12,.2);
   --lost:#e05555; --lost-ink:#ef7a7a; --lost-tint:rgba(224,85,85,.2);
+  --won-cell:#1d4a24; --lost-cell:#5a2226;
   --push-tint:rgba(137,135,129,.22);
   --live-tint:rgba(237,161,0,.2);
   --split:#9085e9;
@@ -88,7 +91,6 @@ header.top .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;align-content:start}
 .stat .k{font-size:12px;color:var(--muted)}
 .stat .v{font:600 22px/1.1 var(--display)}
-.stat .v.good{color:var(--won-ink)} .stat .v.bad{color:var(--lost-ink)}
 
 /* Section */
 section.block{display:flex;flex-direction:column;gap:14px}
@@ -108,9 +110,9 @@ section.block{display:flex;flex-direction:column;gap:14px}
 .weeksum b{color:var(--ink);font-weight:600}
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:0}
 
-/* Board */
+/* Board (mis dos cuentas) */
 .board{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
-.bhead,.game{display:grid;grid-template-columns:92px minmax(230px,1.5fr) 118px 118px minmax(150px,1fr);gap:14px;align-items:center;padding:10px 16px}
+.bhead,.game{display:grid;grid-template-columns:92px minmax(230px,1fr) 150px 150px;gap:14px;align-items:center;padding:10px 16px}
 .bhead{font:600 11px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-block:11px}
 .bhead .e{display:flex;align-items:center}
 .game{border-bottom:1px solid var(--line);position:relative}
@@ -141,33 +143,33 @@ section.block{display:flex;flex-direction:column;gap:14px}
 .pick.hidden{background:transparent;border:1px dashed var(--line-2);color:var(--muted);font-size:12px;line-height:1.2}
 .pick.none{background:transparent;color:var(--muted)}
 .mlabel{display:none}
-
-.dist{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
-.dist .bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:var(--surface)}
-.dist .bar i{display:block;height:100%;background:var(--line-2)}
-.dist .bar i:first-child{border-radius:4px 0 0 4px} .dist .bar i:last-child{border-radius:0 4px 4px 0}
-.dist .bar i.win{background:var(--won)}
-.dist .lbl{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
-.dist .na{color:var(--muted);font-size:12px}
 .empty{padding:28px 16px;color:var(--muted);text-align:center}
 
-/* Charts */
-.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
-.card h3{font-size:21px;font-weight:700;text-transform:uppercase}
-.card .note{font-size:13px;color:var(--ink-2)}
-.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-2)}
-.chart svg{display:block;width:100%;height:auto;overflow:visible}
-.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
-.chart .val{fill:var(--ink-2);font-weight:600}
-.chart .grid{stroke:var(--line);stroke-width:1}
-.chart .axis{stroke:var(--line-2);stroke-width:1}
-.tip{position:fixed;pointer-events:none;background:var(--raised);color:var(--ink);border:1px solid var(--line-2);border-radius:6px;padding:7px 10px;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:10;max-width:240px}
-.vs table{width:100%;border-collapse:collapse;font-size:14px}
-.vs th{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
-.vs th:first-child,.vs td:first-child{text-align:left}
-.vs td{padding:9px 4px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
-.vs tr:last-child td{border-bottom:0}
+/* Grid de la polla (todos x partidos) */
+.gridlegend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-2);align-items:center}
+.gridlegend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.gridwrap{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:auto;max-height:78vh}
+table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
+.pg th,.pg td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;text-align:center;white-space:nowrap}
+.pg thead th{position:sticky;top:0;z-index:2;background:var(--surface);font-weight:600;padding:8px 3px;vertical-align:bottom}
+.pg .c-name,.pg .c-rec{position:sticky;z-index:1;background:var(--surface);text-align:left}
+.pg .c-name{left:0;min-width:176px;max-width:176px;padding:0 10px;overflow:hidden;text-overflow:ellipsis}
+.pg .c-rec{left:176px;min-width:56px;text-align:center;font:700 14px/1 var(--display);border-right:2px solid var(--line-2)}
+.pg thead .c-name,.pg thead .c-rec{z-index:3;font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pg .c-name .rk{display:inline-block;min-width:30px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+.pg th.g{min-width:46px;font:700 13px/1.1 var(--display);color:var(--ink-2)}
+.pg th.g span{display:block}
+.pg th.g .at{color:var(--muted);font-weight:600}
+.pg th.g .cov{color:var(--won-ink)}
+.pg td.p{height:28px;font:700 14px/28px var(--display);color:var(--ink-2)}
+.pg td.p.won{background:var(--won-cell);color:var(--won-ink)}
+.pg td.p.lost{background:var(--lost-cell);color:var(--lost-ink)}
+.pg td.p.push{background:var(--push-tint)}
+.pg td.p.none{color:var(--muted);font-weight:500}
+.pg tr.me td{font-weight:700}
+.pg tr.me .c-name,.pg tr.me .c-rec{background:linear-gradient(var(--c-tint),var(--c-tint)),var(--surface)}
+.pg tr.me .c-name{box-shadow:inset 4px 0 0 var(--c)}
+.pg tbody tr:hover td.c-name,.pg tbody tr:hover td.c-rec{background:var(--bar-bg)}
 
 /* Standings */
 .tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow-x:auto}
@@ -177,29 +179,12 @@ table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
 .std tr:last-child td{border-bottom:0}
 .std .r{width:64px;color:var(--ink-2)}
 .std .rt{text-align:right}
-.std tr.part{cursor:pointer}
-.std tr.part:hover td{background:var(--bar-bg)}
 .std tr.me td{background:var(--c-tint);font-weight:600}
 .std tr.me td:first-child{box-shadow:inset 4px 0 0 var(--c)}
 .std tr.gap td{color:var(--muted);text-align:center;font-size:12px;padding:5px}
-.std .caret{display:inline-block;width:1.1em;color:var(--muted);font-size:11px}
-.std tr.part.open td{background:var(--bar-bg)}
-.std .picksrow td{padding:0;background:var(--ground)}
-.pl-rec{padding:10px 16px 2px;font:700 14px/1 var(--display);color:var(--ink-2);letter-spacing:.02em}
-.pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px;padding:10px 16px 14px}
-.pl .pk{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:6px;background:var(--surface);border:1px solid var(--line);font-size:12px}
-.pl .pk .mt{color:var(--muted);font-variant-numeric:tabular-nums}
-.pl .pk .at{margin:0 2px;opacity:.6}
-.pl .pk .ch{font:700 15px/1 var(--display)}
-.pl .pk .sp2{font:500 11px/1 var(--body);color:var(--muted);margin-left:4px}
-.pl .pk.won{background:var(--won-tint);border-color:transparent} .pl .pk.won .ch{color:var(--won-ink)}
-.pl .pk.lost{background:var(--lost-tint);border-color:transparent} .pl .pk.lost .ch{color:var(--lost-ink)}
-.pl .pk.push{background:var(--push-tint);border-color:transparent}
-.pl .pk.pending .ch{color:var(--ink)}
-.pl .pk.wait{border-style:dashed} .pl .pk.wait .ch{color:var(--muted);font-size:12px}
-.pl .pk.none .ch{color:var(--muted)}
-.pl-empty{padding:14px 16px;color:var(--muted);font-size:13px}
+
 /* Survivors */
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
 .svcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .svhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .svhead h3{font:700 22px/1 var(--display);text-transform:uppercase}
@@ -208,13 +193,14 @@ table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
 .svtop{background:var(--bar-bg);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .svtop .lbl{font:600 11px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .svtop .lbl b{color:var(--ink-2)}
-.svtop .row{display:flex;gap:8px;flex-wrap:wrap}
+.svtop .row{display:flex;gap:6px;flex-wrap:wrap}
 .svtop .fade{color:var(--muted);font-size:12px}
-.topteam{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 10px}
-.topteam .rk{font:700 11px/1 var(--display);color:var(--muted);width:14px}
-.topteam .ab{font:700 16px/1 var(--display)}
+.topteam{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:5px 9px}
+.topteam .rk{font:700 11px/1 var(--display);color:var(--muted);min-width:14px}
+.topteam .ab{font:700 15px/1 var(--display)}
 .topteam .n{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .topteam .n b{color:var(--ink);font-weight:700}
+.topteam.mine{border-color:var(--ink-2)}
 .sventry{border-top:1px solid var(--line);padding-top:11px;display:flex;flex-direction:column;gap:8px}
 .sventry:first-of-type{border-top:0;padding-top:0}
 .sventry .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -245,9 +231,10 @@ footer a{color:var(--ink-2)}
   .game .when{grid-column:1/-1;display:flex;gap:8px;align-items:baseline}
   .game .when .st{display:inline}
   .game .matchup{grid-column:1/-1}
-  .game .dist{grid-column:1/-1}
   .mlabel{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
   .entry .rank{font-size:52px}
+  .pg .c-name{min-width:128px;max-width:128px}
+  .pg .c-rec{left:128px}
 }
 @media (prefers-reduced-motion:no-preference){
   .seg button{transition:background .15s,color .15s}
@@ -288,6 +275,21 @@ footer a{color:var(--ink-2)}
     <div class="board" id="board"></div>
   </section>
 
+  <section class="block" id="gridblock">
+    <div class="block-head">
+      <div>
+        <h2>Piques de la polla</h2>
+        <div class="sub" id="gridsub"></div>
+      </div>
+      <div class="gridlegend">
+        <span><i style="background:var(--won-cell)"></i>Cubrió</span>
+        <span><i style="background:var(--lost-cell)"></i>No cubrió</span>
+        <span><i style="background:var(--bar-bg)"></i>Por jugar</span>
+      </div>
+    </div>
+    <div class="gridwrap" id="gridwrap"></div>
+  </section>
+
   <section class="block" id="survblock" hidden>
     <div class="block-head">
       <div>
@@ -300,10 +302,7 @@ footer a{color:var(--ink-2)}
 
   <section class="block">
     <div class="block-head">
-      <div>
-        <h2>Tabla</h2>
-        <div class="sub">Toca a cualquier participante para ver sus piques de <b id="stdweek">la semana</b>.</div>
-      </div>
+      <h2>Tabla</h2>
       <button type="button" class="linkbtn" id="stdtoggle">Ver la tabla completa</button>
     </div>
     <div class="tablewrap"><table class="std" id="std"></table></div>
@@ -331,8 +330,26 @@ const spr = v => v == null ? '' : (v > 0 ? '+' + v : v === 0 ? 'PK' : String(v))
 const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
 const now = Date.now();
 
+// Abreviaciones comunes de la NFL (Splash usa JAC y LA).
+const ABBR = { JAC: 'JAX', LA: 'LAR' };
+const nab = a => (a && ABBR[a]) || a;
+(function normalize() {
+  for (const w of DATA.weeks) for (const g of w.games) {
+    g.away.ab = nab(g.away.ab); g.home.ab = nab(g.home.ab);
+    for (const k in g.picks) g.picks[k].t = nab(g.picks[k].t);
+  }
+  for (const wk in DATA.allPicks || {}) {
+    const ap = DATA.allPicks[wk];
+    for (const h in ap.p) ap.p[h] = ap.p[h].split(',').map(nab).join(',');
+  }
+  for (const sv of DATA.survivors || []) {
+    for (const e of sv.entries) for (const w in e.picks) { const p = e.picks[w]; p.t = nab(p.t); p.opp = nab(p.opp); }
+    if (sv.topPicks) for (const t of sv.topPicks.teams) t.ab = nab(t.ab);
+  }
+})();
+
 function gameState(g) {
-  if (g.st === 'finalized' || g.st === 'closed' || g.st === 'complete') return 'final';
+  if (g.st === 'finalized' || g.st === 'closed' || g.st === 'complete' || g.st === 'finished') return 'final';
   if (g.st === 'scheduled' || g.st === 'created') return new Date(g.at).getTime() > now ? 'sched' : 'live';
   return 'live';
 }
@@ -341,10 +358,16 @@ function coverMargin(g, ab) { const [t, o] = teamOf(g, ab); return t.sc + t.sp -
 function pickResult(g, p) {
   if (!p) return null;
   const st = gameState(g);
-  if (p.g) return p.g === 'won' ? 'won' : p.g === 'lost' ? 'lost' : 'push';
+  if (p.g === 'won' || p.g === 'lost' || p.g === 'push') return p.g;
   if (st === 'final') { const m = coverMargin(g, p.t); return m > 0 ? 'won' : m < 0 ? 'lost' : 'push'; }
   if (st === 'live') { const m = coverMargin(g, p.t); return m > 0 ? 'live-up' : m < 0 ? 'live-down' : 'live-even'; }
   return 'pending';
+}
+function outcome(g, alias) {
+  if (!alias) return 'none';
+  if (gameState(g) !== 'final') return 'pending';
+  const m = coverMargin(g, alias);
+  return m > 0 ? 'won' : m < 0 ? 'lost' : 'push';
 }
 function record(games, who) {
   let w = 0, l = 0, p = 0, pend = 0;
@@ -374,9 +397,8 @@ $('updated').textContent = 'Actualizado ' + fmt(DATA.fetchedAt, { weekday: 'long
 /* Entry cards */
 const std = DATA.standings;
 const field = std.length;
-const leader = std[0];
 (function cards() {
-  const html = ENTRIES.map((who, i) => {
+  $('entries').innerHTML = ENTRIES.map((who, i) => {
     const s = std.find(x => x.h === who) || {};
     const wk = record(cur.games, who);
     return `<article class="entry" style="--c:var(--${ECOL[i]})">
@@ -389,10 +411,9 @@ const leader = std[0];
       </div>
     </article>`;
   }).join('');
-  $('entries').innerHTML = html;
 })();
 
-/* Week board */
+/* Week board: mis dos cuentas */
 let selWeek = cur.n;
 let filter = 'all';
 try { const f = localStorage.getItem('polla-filter'); if (f) filter = f; } catch (e) {}
@@ -416,17 +437,6 @@ function pickCell(g, who, i) {
   const cls = r === 'live-even' ? 'push' : r;
   return `<div>${label}<div class="pick ${cls}" style="box-shadow:inset 3px 0 0 var(--${ECOL[i]})"><span class="t">${esc(p.t)}</span><span class="s">${spr(t.sp)}</span><span class="r">${rtxt}</span></div></div>`;
 }
-function distCell(g) {
-  if (!g.dist) return `<div class="dist"><span class="na">Distribución visible al cerrar</span></div>`;
-  const a = g.dist[g.away.ab] || { pct: 0 }, h = g.dist[g.home.ab] || { pct: 0 };
-  const st = gameState(g);
-  let winAb = null;
-  if (st === 'final') { const m = coverMargin(g, g.away.ab); winAb = m > 0 ? g.away.ab : m < 0 ? g.home.ab : null; }
-  return `<div class="dist" title="${esc(g.away.ab)} ${a.pct}% (${a.n || 0}) · ${esc(g.home.ab)} ${h.pct}% (${h.n || 0})">
-    <div class="lbl"><span>${esc(g.away.ab)} ${Math.round(a.pct)}%</span><span>${Math.round(h.pct)}% ${esc(g.home.ab)}</span></div>
-    <div class="bar"><i class="${winAb === g.away.ab ? 'win' : ''}" style="width:${a.pct}%"></i><i class="${winAb === g.home.ab ? 'win' : ''}" style="width:${h.pct}%"></i></div>
-  </div>`;
-}
 function teamRow(g, t, o, st) {
   const loser = st === 'final' && t.sc < o.sc;
   const showSc = st !== 'sched';
@@ -443,7 +453,7 @@ function renderBoard() {
     `<span>Coinciden en <b class="num">${same}</b> de ${known}${known < games.length ? ` <span style="color:var(--muted)">(${games.length - known} aún ocultos)</span>` : ''}</span>`;
   let list = games;
   if (filter === 'same') list = games.filter(g => ENTRIES.every(e => g.picks[e]) && !isSplit(g));
-  const head = `<div class="bhead"><span>Hora</span><span>Partido · spread</span>${ENTRIES.map((e, i) => `<span class="e"><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</span>`).join('')}<span>Pique de la polla</span></div>`;
+  const head = `<div class="bhead"><span>Hora</span><span>Partido · spread</span>${ENTRIES.map((e, i) => `<span class="e"><span class="sw" style="--c:var(--${ECOL[i]})"></span>${esc(e)}</span>`).join('')}</div>`;
   if (!list.length) { $('board').innerHTML = head + `<div class="empty">${known < games.length ? 'Los piques de ambas cuentas se ven cuando cierra la semana.' : 'Las dos cuentas no coinciden en ningún partido de esta semana.'}</div>`; return; }
   $('board').innerHTML = head + list.map(g => {
     const st = gameState(g);
@@ -452,59 +462,67 @@ function renderBoard() {
       <div class="when"><span class="st ${st === 'live' ? 'live' : ''}">${stTxt}</span>${fmtDay(g.at)}</div>
       <div class="matchup">${teamRow(g, g.away, g.home, st)}${teamRow(g, g.home, g.away, st).replace('</span></div>', '</span>' + (g.tb ? '<span class="tbtag">Desempate</span>' : '') + '</div>')}</div>
       ${ENTRIES.map((e, i) => pickCell(g, e, i)).join('')}
-      ${distCell(g)}
     </div>`;
   }).join('');
 }
-$('weekseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; selWeek = b.dataset.w; renderWeekSeg(); renderBoard(); if (typeof renderStd === 'function') renderStd(); });
-$('filterseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; try { localStorage.setItem('polla-filter', filter); } catch (err) {} renderWeekSeg(); renderBoard(); });
-renderWeekSeg(); renderBoard();
 
-/* Standings — cada participante se expande con sus piques de la semana seleccionada */
-let showAll = false;
-const open = new Set();
-
-// Piques de un participante en la semana seleccionada: gameId -> alias.
-function entryPicks(handle) {
-  const ap = (DATA.allPicks || {})[selWeek];
-  if (!ap || !ap.p || ap.p[handle] == null) return null;
-  const aliases = ap.p[handle].split(',');
-  const map = {};
-  ap.gids.forEach((gid, i) => { if (aliases[i] && aliases[i] !== '-') map[gid] = aliases[i]; });
-  return map;
-}
-function outcome(g, alias) {
-  if (!alias) return 'none';
-  if (gameState(g) !== 'final') return 'pending';
-  const m = coverMargin(g, alias);
-  return m > 0 ? 'won' : m < 0 ? 'lost' : 'push';
-}
-function picksPanel(handle) {
+/* Grid: todos los participantes x partidos de la semana seleccionada */
+function renderGrid() {
   const wk = weeks.find(w => w.n === selWeek);
-  const map = entryPicks(handle);
-  if (!map) {
-    const locked = new Date(wk.lock).getTime() <= now;
-    return `<div class="pl-empty">${locked ? 'No hay piques guardados de esta semana.' : 'Los piques de los demás se ven cuando cierra la semana (' + fmtDay(wk.lock) + ' ' + fmtTime(wk.lock) + ').'}</div>`;
+  const ap = (DATA.allPicks || {})[selWeek];
+  const games = wk.games;
+  if (!ap || !ap.p || !Object.keys(ap.p).length) {
+    $('gridsub').textContent = `${weekLabel(wk.n)} · los piques de la polla se ven cuando cierra la semana.`;
+    $('gridwrap').innerHTML = `<div class="empty">Todavía no hay piques revelados en esta semana.</div>`;
+    return;
   }
-  let w = 0, l = 0, hidden = 0;
-  const chips = wk.games.map(g => {
-    const alias = map[g.id];
-    const locked = new Date(g.lockAt).getTime() <= now;
-    let r, inner;
-    if (alias) {
-      r = outcome(g, alias);
+  const rankOf = Object.fromEntries(std.map(s => [s.h, s.r]));
+  const rows = Object.entries(ap.p).map(([h, str]) => {
+    const aliases = str.split(',');
+    const byGid = {};
+    ap.gids.forEach((gid, i) => { if (aliases[i] && aliases[i] !== '-') byGid[gid] = aliases[i]; });
+    let w = 0, l = 0;
+    const cells = games.map(g => {
+      const a = byGid[g.id];
+      const r = outcome(g, a);
       if (r === 'won') w++; else if (r === 'lost') l++;
-      const [t] = teamOf(g, alias);
-      inner = `${esc(alias)}<span class="sp2">${spr(t.sp)}</span>`;
-    } else if (!locked) { r = 'wait'; inner = '🔒'; hidden++; }
-    else { r = 'none'; inner = '—'; }
-    return `<div class="pk ${r}"><span class="mt">${esc(g.away.ab)}<span class="at">@</span>${esc(g.home.ab)}</span><span class="ch">${inner}</span></div>`;
+      return { a, r };
+    });
+    return { h, w, l, cells, overall: rankOf[h] ?? 999 };
+  });
+  rows.sort((x, y) => y.w - x.w || x.l - y.l || x.overall - y.overall || x.h.localeCompare(y.h));
+  // Puesto de la semana (empates comparten puesto).
+  let place = 0;
+  rows.forEach((r, i) => { if (i === 0 || r.w !== rows[i - 1].w || r.l !== rows[i - 1].l) place = i + 1; r.place = place; });
+
+  const done = games.filter(g => gameState(g) === 'final').length;
+  const top = rows[0];
+  $('gridsub').textContent = `${weekLabel(wk.n)} · ${rows.length} participantes · ${done} de ${games.length} partidos terminados · ordenado por aciertos` + (done ? ` · líder de la semana: ${top.h} (${top.w}-${top.l})` : '');
+
+  const head = games.map(g => {
+    let cov = null;
+    if (gameState(g) === 'final') { const m = coverMargin(g, g.away.ab); cov = m > 0 ? g.away.ab : m < 0 ? g.home.ab : null; }
+    const tip = `${g.away.ab} ${spr(g.away.sp)} @ ${g.home.ab} ${spr(g.home.sp)}` + (gameState(g) === 'final' ? ` · Final ${g.away.sc}-${g.home.sc}` : ` · ${fmtDay(g.at)} ${fmtTime(g.at)}`);
+    return `<th class="g" title="${esc(tip)}"><span class="${cov === g.away.ab ? 'cov' : ''}">${esc(g.away.ab)}</span><span class="at">@<span class="${cov === g.home.ab ? 'cov' : ''}">${esc(g.home.ab)}</span></span></th>`;
   }).join('');
-  const rec = `${w}-${l} ATS en ${weekLabel(wk.n)}` + (hidden ? ` · ${hidden} por revelarse` : '');
-  return `<div class="pl-rec">${rec}</div><div class="pl">${chips}</div>`;
+  const body = rows.map(r => {
+    const ei = ENTRIES.indexOf(r.h);
+    const style = ei >= 0 ? ` style="--c:var(--${ECOL[ei]});--c-tint:var(--${ECOL[ei]}-tint)"` : '';
+    const tds = r.cells.map(c => c.a
+      ? `<td class="p ${c.r}">${esc(c.a)}</td>`
+      : `<td class="p none">·</td>`).join('');
+    return `<tr class="${ei >= 0 ? 'me' : ''}"${style}><td class="c-name"><span class="rk">${r.place}</span>${esc(r.h)}</td><td class="c-rec">${r.w}-${r.l}</td>${tds}</tr>`;
+  }).join('');
+  $('gridwrap').innerHTML = `<table class="pg"><thead><tr><th class="c-name">Participante</th><th class="c-rec">Sem</th>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
+
+$('weekseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; selWeek = b.dataset.w; renderWeekSeg(); renderBoard(); renderGrid(); });
+$('filterseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; try { localStorage.setItem('polla-filter', filter); } catch (err) {} renderWeekSeg(); renderBoard(); });
+renderWeekSeg(); renderBoard(); renderGrid();
+
+/* Standings: fija, solo récord */
+let showAll = false;
 function renderStd() {
-  $('stdweek').textContent = weekLabel(selWeek);
   const mineIdx = std.map((s, i) => s.me ? i : -1).filter(i => i >= 0);
   const keep = new Set();
   if (showAll) std.forEach((_, i) => keep.add(i));
@@ -518,14 +536,11 @@ function renderStd() {
     if (prev >= 0 && i - prev > 1) rows += `<tr class="gap"><td colspan="4">· · ·</td></tr>`;
     prev = i;
     const ei = ENTRIES.indexOf(s.h);
-    const isOpen = open.has(s.h);
-    rows += `<tr class="part ${s.me ? 'me' : ''} ${isOpen ? 'open' : ''}" data-h="${esc(s.h)}" ${ei >= 0 ? `style="--c:var(--${ECOL[ei]});--c-tint:var(--${ECOL[ei]}-tint)"` : ''}><td class="r">${esc(s.dr)}</td><td><span class="caret">${isOpen ? '▾' : '▸'}</span>${esc(s.h)}</td><td class="rt">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="rt">${pct(s.w, s.w + s.l)}</td></tr>`;
-    if (isOpen) rows += `<tr class="picksrow"><td colspan="4">${picksPanel(s.h)}</td></tr>`;
+    rows += `<tr class="${s.me ? 'me' : ''}" ${ei >= 0 ? `style="--c:var(--${ECOL[ei]});--c-tint:var(--${ECOL[ei]}-tint)"` : ''}><td class="r">${esc(s.dr)}</td><td>${esc(s.h)}</td><td class="rt">${s.w}-${s.l}${s.t ? '-' + s.t : ''}</td><td class="rt">${pct(s.w, s.w + s.l)}</td></tr>`;
   });
   $('std').innerHTML = `<thead><tr><th>Puesto</th><th>Participante</th><th class="rt">Récord</th><th class="rt">%</th></tr></thead><tbody>${rows}</tbody>`;
   $('stdtoggle').textContent = showAll ? 'Ver solo el resumen' : `Ver la tabla completa (${field})`;
 }
-$('std').addEventListener('click', e => { const tr = e.target.closest('tr.part'); if (!tr) return; const h = tr.dataset.h; if (open.has(h)) open.delete(h); else open.add(h); renderStd(); });
 $('stdtoggle').addEventListener('click', () => { showAll = !showAll; renderStd(); });
 renderStd();
 
@@ -538,12 +553,13 @@ renderStd();
   const rule = m => m === 'pick_loser'
     ? 'Escoge un equipo que <b>pierda</b> cada semana, sin repetir.'
     : 'Escoge un equipo que <b>gane</b> cada semana, sin repetir.';
-  const html = svs.map(sv => {
+  $('survivors').innerHTML = svs.map(sv => {
     const alive = sv.entries.filter(e => e.alive).length;
     const entries = [...sv.entries].sort((a, b) => (a.acct || '').localeCompare(b.acct || '') || a.order - b.order);
+    const myCur = new Set(entries.filter(e => e.alive).map(e => (e.picks[sv.curWeek] || {}).t).filter(Boolean));
     const rows = entries.map(e => {
-      const weeks = Object.keys(e.picks).sort((a, b) => weekNo(a) - weekNo(b));
-      const cells = weeks.map(w => {
+      const wks = Object.keys(e.picks).sort((a, b) => weekNo(a) - weekNo(b));
+      const cells = wks.map(w => {
         const p = e.picks[w];
         let cls = 'pending', label = p.t || '—', sc = '';
         if (p.missed) { cls = 'missed'; label = 'Sin pick'; }
@@ -558,23 +574,23 @@ renderStd();
         ? `<span class="chip alive"><span class="dot"></span>Vivo${e.lives > 1 ? ' · ' + e.lives + ' vidas' : ''}</span>`
         : `<span class="chip dead"><span class="dot"></span>Eliminado${e.elimWeek ? ' · Sem ' + weekNo(e.elimWeek) : ''}</span>`;
       return `<div class="sventry">
-        <div class="top"><span class="who2">${esc(e.acct)} #${e.order}</span>${status}<span class="svrec">${weeks.length} sem</span></div>
+        <div class="top"><span class="who2">${esc(e.acct)} #${e.order}</span>${status}<span class="svrec">${wks.length} sem</span></div>
         <div class="svweeks">${cells}</div>
       </div>`;
     }).join('');
-    const verb = sv.pickMode === 'pick_loser' ? 'pierda' : 'gane';
     let top = '';
+    const revealed = sv.lock && new Date(sv.lock).getTime() <= now;
     if (sv.topPicks && sv.topPicks.teams && sv.topPicks.teams.length) {
       const tp = sv.topPicks;
-      const chips = tp.teams.slice(0, 3).map((t, i) =>
-        `<div class="topteam"><span class="rk">${i + 1}</span><span class="ab">${esc(t.ab)}</span><span class="n"><b>${t.n}</b> · ${t.pct}%</span></div>`).join('');
+      const total = tp.teams.reduce((a, t) => a + t.n, 0);
+      const chips = tp.teams.map((t, i) =>
+        `<div class="topteam ${myCur.has(t.ab) ? 'mine' : ''}"><span class="rk">${i + 1}</span><span class="ab">${esc(t.ab)}</span><span class="n"><b>${t.n}</b> · ${t.pct}%</span></div>`).join('');
       top = `<div class="svtop">
-        <div class="lbl">Más escogidos · <b>${esc(weekLabel(tp.week))}</b>${tp.settled ? '' : ' · se completa al cerrar'}</div>
+        <div class="lbl">Piques de la polla · <b>${esc(weekLabel(tp.week))}</b> · ${total} entradas${revealed ? '' : ' · se completa al cerrar'}</div>
         <div class="row">${chips}</div>
-        <div class="fade">Reman en contra: escoge equipos distintos a estos para que un mal domingo no te tumbe con la mayoría.</div>
       </div>`;
     } else if (sv.entries.some(e => e.alive)) {
-      top = `<div class="svtop"><div class="lbl">Más escogidos · ${esc(weekLabel(sv.curWeek || ''))}</div><div class="fade">Se revela cuando cierran los piques de la semana.</div></div>`;
+      top = `<div class="svtop"><div class="lbl">Piques de la polla · ${esc(weekLabel(sv.curWeek || ''))}</div><div class="fade">Se revelan cuando cierran los piques de la semana.</div></div>`;
     }
     return `<div class="svcard">
       <div class="svhead"><h3>${esc(sv.short)}</h3><span class="rule">${rule(sv.pickMode)}</span></div>
@@ -583,7 +599,6 @@ renderStd();
       ${rows}
     </div>`;
   }).join('');
-  $('survivors').innerHTML = html;
 })();
 
 $('foot').textContent = `Datos de Splash Sports · ${field} participantes · se actualiza automáticamente`;

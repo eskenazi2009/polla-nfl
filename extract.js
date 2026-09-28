@@ -71,16 +71,10 @@
     const allPicks = {}; // nombre de semana -> { gids:[...], p:{ handle: "AL,AL,-,..." } }
     for (const s of active) {
       const base = `team-pickem/picksheets?contestId=${CONTEST}&slateId=${s.id}`;
-      const [sheet, stats, ...entrySheets] = await Promise.all([
+      const [sheet, ...entrySheets] = await Promise.all([
         get(base),
-        get(`team-pickem/statistics?contestId=${CONTEST}&slateId=${s.id}&offset=0&limit=25`).catch(() => ({ data: [] })),
         ...Object.keys(ENTRIES).map(id => get(`${base}&entryId=${id}`)),
       ]);
-      const dist = {};
-      for (const gs of stats.data || []) {
-        dist[gs.gameId] = {};
-        for (const p of gs.picks) dist[gs.gameId][p.team.alias] = { pct: p.picked.percent, n: p.picked.count, auto: p.autoPicked.count };
-      }
       const idAlias = {};
       for (const gm of sheet.data.games) { idAlias[gm.home.id] = gm.home.alias; idAlias[gm.away.id] = gm.away.alias; }
       const gids = sheet.data.games.map(gm => gm.gameId);
@@ -97,7 +91,7 @@
         const team = t => ({ ab: t.alias, name: t.name, sc: t.score, sp: t.spread, rec: t.record ? `${t.record.wins}-${t.record.losses}${t.record.ties ? '-' + t.record.ties : ''}` : '' });
         return {
           id: gm.gameId, at: gm.startsAt, lockAt: gm.lockAt, st: gm.status, state: gm.state,
-          away: team(gm.away), home: team(gm.home), tb: gm.isTiebreakerGame, picks, dist: dist[gm.gameId] || null,
+          away: team(gm.away), home: team(gm.home), tb: gm.isTiebreakerGame, picks,
         };
       });
       weeks.push({ n: s.name, status: s.status, current: s.isCurrentSlate, lock: s.pickLockDate, start: s.startDate, end: s.endDate, games });
@@ -164,7 +158,7 @@
             .map(x => ({ ab: x.team.alias, n: x.picked ? x.picked.count : 0, pct: x.picked ? x.picked.percent : 0 }))
             .filter(t => t.n > 0)
             .sort((a, b) => b.n - a.n);
-          topPicks = { week: curSlate.name, settled: curSlate.status === 'settled', teams: teams.slice(0, 5) };
+          topPicks = { week: curSlate.name, settled: curSlate.status === 'settled', teams };
         } catch (e) { /* sin acceso a stats: se queda null */ }
       }
       survivors.push({
