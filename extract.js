@@ -114,7 +114,11 @@
     const acct = ACCT_BY_UID[myUid] || 'Cuenta';
     const survivors = [];
     for (const sv of SURVIVORS) {
-      const slates = (await get(`contests/slates?contestId=${sv.id}&limit=25&offset=0`)).data;
+      // Si esta cuenta no está inscrita en el concurso, Splash responde 403/404: se salta
+      // y build.py conserva lo que haya guardado de la otra cuenta.
+      let slates;
+      try { slates = (await get(`contests/slates?contestId=${sv.id}&limit=25&offset=0`)).data; }
+      catch (e) { continue; }
       const svActive = slates.filter(s => s.status !== 'scheduled');
       const gameById = {}; let pickMode = null; let deadline = null;
       for (const s of svActive) {
