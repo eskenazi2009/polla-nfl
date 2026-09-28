@@ -165,6 +165,10 @@ table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
 .pg td.p.won{background:var(--won-cell);color:var(--won-ink)}
 .pg td.p.lost{background:var(--lost-cell);color:var(--lost-ink)}
 .pg td.p.push{background:var(--push-tint)}
+.pg td.p.live-up{background:var(--won-tint);color:var(--won-ink);box-shadow:inset 0 -2px 0 var(--live)}
+.pg td.p.live-down{background:var(--lost-tint);color:var(--lost-ink);box-shadow:inset 0 -2px 0 var(--live)}
+.pg th.g .gsc{margin-top:3px;font:600 10px/1 var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.pg th.g .gsc.on{color:var(--live)}
 .pg td.p.none{color:var(--muted);font-weight:500}
 .pg tr.me td{font-weight:700}
 .pg tr.me .c-name,.pg tr.me .c-rec{background:linear-gradient(var(--c-tint),var(--c-tint)),var(--surface)}
@@ -220,6 +224,14 @@ table.std{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
 .svw.pending{background:transparent;border-color:var(--line-2)} .svw.pending .tm{color:var(--ink)}
 .svw.missed{background:var(--lost-tint)} .svw.missed .tm{color:var(--lost-ink);font-size:11px}
 .svw.dim{opacity:.5}
+.svw.liveup,.svw.livedown{border-color:var(--live)}
+.svw.liveup{background:var(--won-tint)} .svw.liveup .tm{color:var(--won-ink)}
+.svw.livedown{background:var(--lost-tint)} .svw.livedown .tm{color:var(--lost-ink)}
+.svw.liveup .sc,.svw.livedown .sc{color:var(--ink-2);font-weight:700}
+.livestamp{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);font-size:13px}
+.livestamp .dot{width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){.livestamp .dot{animation:none}}
 .linkbtn{border:1px solid var(--line-2);background:var(--raised);border-radius:7px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
 .linkbtn:hover{border-color:var(--ink-2)}
 footer{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
@@ -253,6 +265,7 @@ footer a{color:var(--ink-2)}
     <div class="meta">
       <span class="lockchip" id="lockchip"><span class="dot"></span><span id="locktext"></span></span>
       <span class="updated" id="updated"></span>
+      <span class="livestamp" id="livestamp" hidden><span class="dot"></span><span id="livetext"></span></span>
     </div>
   </header>
 
@@ -284,6 +297,7 @@ footer a{color:var(--ink-2)}
       <div class="gridlegend">
         <span><i style="background:var(--won-cell)"></i>Cubrió</span>
         <span><i style="background:var(--lost-cell)"></i>No cubrió</span>
+        <span><i style="background:var(--won-tint);box-shadow:inset 0 -2px 0 var(--live)"></i>En vivo</span>
         <span><i style="background:var(--bar-bg)"></i>Por jugar</span>
       </div>
     </div>
@@ -328,7 +342,7 @@ const fmtDay = iso => fmt(iso, { weekday: 'short', day: 'numeric', month: 'short
 const fmtTime = iso => fmt(iso, { hour: 'numeric', minute: '2-digit' });
 const spr = v => v == null ? '' : (v > 0 ? '+' + v : v === 0 ? 'PK' : String(v));
 const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
-const now = Date.now();
+let now = Date.now();
 
 // Abreviaciones comunes de la NFL (Splash usa JAC y LA).
 const ABBR = { JAC: 'JAX', LA: 'LAR' };
@@ -397,7 +411,7 @@ $('updated').textContent = 'Actualizado ' + fmt(DATA.fetchedAt, { weekday: 'long
 /* Entry cards */
 const std = DATA.standings;
 const field = std.length;
-(function cards() {
+function renderCards() {
   $('entries').innerHTML = ENTRIES.map((who, i) => {
     const s = std.find(x => x.h === who) || {};
     const wk = record(cur.games, who);
@@ -411,7 +425,8 @@ const field = std.length;
       </div>
     </article>`;
   }).join('');
-})();
+}
+renderCards();
 
 /* Week board: mis dos cuentas */
 let selWeek = cur.n;
@@ -457,7 +472,7 @@ function renderBoard() {
   if (!list.length) { $('board').innerHTML = head + `<div class="empty">${known < games.length ? 'Los piques de ambas cuentas se ven cuando cierra la semana.' : 'Las dos cuentas no coinciden en ningún partido de esta semana.'}</div>`; return; }
   $('board').innerHTML = head + list.map(g => {
     const st = gameState(g);
-    const stTxt = st === 'final' ? 'Final' : st === 'live' ? 'En vivo' : fmtTime(g.at);
+    const stTxt = st === 'final' ? 'Final' : st === 'live' ? (g.live || 'En vivo') : fmtTime(g.at);
     return `<div class="game ${isSplit(g) ? 'split' : ''}">
       <div class="when"><span class="st ${st === 'live' ? 'live' : ''}">${stTxt}</span>${fmtDay(g.at)}</div>
       <div class="matchup">${teamRow(g, g.away, g.home, st)}${teamRow(g, g.home, g.away, st).replace('</span></div>', '</span>' + (g.tb ? '<span class="tbtag">Desempate</span>' : '') + '</div>')}</div>
@@ -484,7 +499,8 @@ function renderGrid() {
     let w = 0, l = 0;
     const cells = games.map(g => {
       const a = byGid[g.id];
-      const r = outcome(g, a);
+      let r = outcome(g, a);
+      if (a && gameState(g) === 'live') { const m = coverMargin(g, a); r = m > 0 ? 'live-up' : m < 0 ? 'live-down' : 'pending'; }
       if (r === 'won') w++; else if (r === 'lost') l++;
       return { a, r };
     });
@@ -502,8 +518,10 @@ function renderGrid() {
   const head = games.map(g => {
     let cov = null;
     if (gameState(g) === 'final') { const m = coverMargin(g, g.away.ab); cov = m > 0 ? g.away.ab : m < 0 ? g.home.ab : null; }
-    const tip = `${g.away.ab} ${spr(g.away.sp)} @ ${g.home.ab} ${spr(g.home.sp)}` + (gameState(g) === 'final' ? ` · Final ${g.away.sc}-${g.home.sc}` : ` · ${fmtDay(g.at)} ${fmtTime(g.at)}`);
-    return `<th class="g" title="${esc(tip)}"><span class="${cov === g.away.ab ? 'cov' : ''}">${esc(g.away.ab)}</span><span class="at">@<span class="${cov === g.home.ab ? 'cov' : ''}">${esc(g.home.ab)}</span></span></th>`;
+    const gs = gameState(g);
+    const tip = `${g.away.ab} ${spr(g.away.sp)} @ ${g.home.ab} ${spr(g.home.sp)}` + (gs === 'final' ? ` · Final ${g.away.sc}-${g.home.sc}` : gs === 'live' ? ` · ${g.live || 'En vivo'} ${g.away.sc}-${g.home.sc}` : ` · ${fmtDay(g.at)} ${fmtTime(g.at)}`);
+    const gsc = gs === 'sched' ? '' : `<span class="gsc ${gs === 'live' ? 'on' : ''}">${g.away.sc}-${g.home.sc}</span>`;
+    return `<th class="g" title="${esc(tip)}"><span class="${cov === g.away.ab ? 'cov' : ''}">${esc(g.away.ab)}</span><span class="at">@<span class="${cov === g.home.ab ? 'cov' : ''}">${esc(g.home.ab)}</span></span>${gsc}</th>`;
   }).join('');
   const body = rows.map(r => {
     const ei = ENTRIES.indexOf(r.h);
@@ -545,7 +563,7 @@ $('stdtoggle').addEventListener('click', () => { showAll = !showAll; renderStd()
 renderStd();
 
 /* Survivors */
-(function survivors() {
+function renderSurvivors() {
   const svs = DATA.survivors || [];
   if (!svs.length) return;
   $('survblock').hidden = false;
@@ -562,13 +580,17 @@ renderStd();
       const cells = wks.map(w => {
         const p = e.picks[w];
         let cls = 'pending', label = p.t || '—', sc = '';
+        // En Homicida (pick_loser) "va bien" significa que tu equipo va perdiendo.
+        const ahead = p.ts == null ? 0 : (sv.pickMode === 'pick_loser' ? p.os - p.ts : p.ts - p.os);
         if (p.missed) { cls = 'missed'; label = 'Sin pick'; }
         else if (p.g === 'won') cls = 'won';
         else if (p.g === 'lost') cls = 'lost';
-        if (p.st === 'finalized' && p.ts != null && (p.ts || p.os)) sc = `${p.ts}-${p.os}`;
+        else if (p.live) cls = ahead > 0 ? 'liveup' : ahead < 0 ? 'livedown' : 'pending';
+        else if (p.st === 'finalized' && ahead) cls = ahead > 0 ? 'won' : 'lost';
+        if ((p.st === 'finalized' || p.live) && p.ts != null && (p.ts || p.os)) sc = `${p.ts}-${p.os}`;
         const dead = !e.alive && weekNo(w) > (e.elimWeek ? weekNo(e.elimWeek) : 99);
-        const tip = `${w}${p.opp ? ' · ' + (p.t || '?') + ' vs ' + p.opp : ''}${sc ? ' (' + sc + ')' : ''}`;
-        return `<div class="svw ${cls} ${dead ? 'dim' : ''}" title="${esc(tip)}"><span class="wk">S${weekNo(w)}</span><span class="tm">${esc(label)}</span><span class="sc">${esc(p.opp ? 'vs ' + p.opp : '')}</span></div>`;
+        const tip = `${w}${p.opp ? ' · ' + (p.t || '?') + ' vs ' + p.opp : ''}${sc ? ' (' + sc + ')' : ''}${p.live ? ' · ' + p.live : ''}`;
+        return `<div class="svw ${cls} ${dead ? 'dim' : ''}" title="${esc(tip)}"><span class="wk">S${weekNo(w)}</span><span class="tm">${esc(label)}</span><span class="sc">${esc(p.live && sc ? sc : p.opp ? 'vs ' + p.opp : '')}</span></div>`;
       }).join('');
       const status = e.alive
         ? `<span class="chip alive"><span class="dot"></span>Vivo${e.lives > 1 ? ' · ' + e.lives + ' vidas' : ''}</span>`
@@ -599,7 +621,58 @@ renderStd();
       ${rows}
     </div>`;
   }).join('');
-})();
+}
+renderSurvivors();
+
+/* Marcadores en vivo (feed público de ESPN; NFL.com no permite leerlos desde otra página).
+   Se actualizan cada 5 min los domingos de 12:00 a 23:00, hora de Panamá. */
+const ESPN_AB = { WSH: 'WAS' };
+const eab = a => ESPN_AB[a] || a;
+function inLiveWindow() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', hourCycle: 'h23' })
+    .formatToParts(new Date()).map(x => [x.type, x.value]));
+  const h = +p.hour;
+  return p.weekday === 'Sun' && h >= 12 && h < 23;
+}
+async function pullLive() {
+  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${weekNum(cur.n)}`, { cache: 'no-store' });
+  if (!r.ok) throw new Error('ESPN ' + r.status);
+  const j = await r.json();
+  for (const ev of j.events || []) {
+    const c = ev.competitions && ev.competitions[0];
+    if (!c || !c.status || c.status.type.state === 'pre') continue;
+    const h = c.competitors.find(x => x.homeAway === 'home'), a = c.competitors.find(x => x.homeAway === 'away');
+    const H = eab(h.team.abbreviation), A = eab(a.team.abbreviation);
+    const sc = { [H]: +h.score || 0, [A]: +a.score || 0 };
+    const done = c.status.type.state === 'post';
+    const clock = done ? null : c.status.type.shortDetail;
+    const g = cur.games.find(x => (x.home.ab === H && x.away.ab === A) || (x.home.ab === A && x.away.ab === H));
+    if (g) { g.home.sc = sc[g.home.ab]; g.away.sc = sc[g.away.ab]; g.st = done ? 'finalized' : 'inprogress'; g.live = clock; }
+    for (const sv of DATA.survivors || []) for (const e of sv.entries) {
+      const p = e.picks[cur.n];
+      if (!p || !(p.t in sc) || p.g) continue;
+      const o = p.t === H ? A : H;
+      p.ts = sc[p.t]; p.os = sc[o]; p.opp = o; p.st = done ? 'finalized' : 'inprogress'; p.live = clock;
+    }
+  }
+}
+let lastLive = 0;
+async function liveTick(force) {
+  if (!force && (!inLiveWindow() || document.hidden)) return;
+  try {
+    await pullLive();
+    lastLive = now = Date.now();
+    renderCards(); renderBoard(); renderGrid(); renderSurvivors();
+    $('livetext').textContent = `Marcadores en vivo · ${fmtTime(new Date().toISOString())}`;
+  } catch (e) {
+    $('livetext').textContent = 'Marcadores en vivo: sin conexión, reintenta en 5 min';
+  }
+  $('livestamp').hidden = false;
+}
+window.pollaLive = () => liveTick(true);
+liveTick();
+setInterval(liveTick, 5 * 60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastLive >= 5 * 60e3) liveTick(); });
 
 $('foot').textContent = `Datos de Splash Sports · ${field} participantes · se actualiza automáticamente`;
 </script>
