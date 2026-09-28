@@ -10,9 +10,9 @@ CUENTA POR DEFECTO: **Kvetchers** (tonye@lafayettezl.com). Las tareas corren con
 sesión que esté activa en el navegador integrado; el dueño la deja en Kvetchers.
 - Con Kvetchers se leen: la Polla (pick'em), Super Survivor y Homicida — incluido el
   "más escogidos" de ambos survivor.
-- KIBBEH solo está en la Polla y en Homicida (no en Super Survivor). Sus entradas de
-  Homicida ya están guardadas; build.py NO las borra al correr con Kvetchers (mezcla
-  por cuenta). Solo hay que volver a correr con KIBBEH si cambian sus piques.
+- Las entradas de Homicida de KIBBEH también se leen con la sesión de Kvetchers (vía
+  `team-survivor/standings?userId=...`), así que NO hace falta cambiar a KIBBEH.
+  Único límite: el pique de KIBBEH de la semana en curso aparece hasta que cierra su juego.
 
 ## Pasos
 

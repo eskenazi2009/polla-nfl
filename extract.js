@@ -109,7 +109,7 @@
       allPicks[s.name] = { gids, p };
     }
 
-    // ---- Survivors: solo MIS entradas de la cuenta con sesión iniciada ----
+    // ---- Survivors: solo MIS entradas (las dos cuentas, sin importar cuál tenga sesión) ----
     const myUid = (mine[0] && mine[0].userId) || null;
     const acct = ACCT_BY_UID[myUid] || 'Cuenta';
     const survivors = [];
@@ -127,30 +127,55 @@
         for (const gm of ps.data.games) gameById[gm.gameId] = { week: s.name, home: team(gm.home), away: team(gm.away), st: gm.status, at: gm.startsAt };
       }
       const slateById = Object.fromEntries(slates.map(s => [s.id, s.name]));
-      const myEnts = (await get(`my-entries?contestId=${sv.id}&limit=20&offset=0&includePicks=true`)).data;
-      const entries = myEnts.map(e => {
-        const picks = {};
-        for (const sl of (e.picks && e.picks.slates) || []) {
-          const p = sl.picks && sl.picks[0];
-          const wk = slateById[sl.slateId];
-          if (!p || !wk) continue;
-          const g = gameById[p.gameId];
-          const t = p.team ? p.team.alias : null;
-          let opp = null, ts = null, os = null, st = null;
-          if (g && g.home && g.away) {
-            const mine = g.home.ab === t ? g.home : g.away, oth = g.home.ab === t ? g.away : g.home;
-            opp = oth.ab; ts = mine.sc; os = oth.sc; st = g.st;
-          }
-          picks[wk] = { t, opp, ts, os, st, g: p.grade || null, missed: !!p.isMissedPick };
+      const mkPick = p => {
+        const g = gameById[p.gameId];
+        const t = p.team ? p.team.alias : null;
+        let opp = null, ts = null, os = null, st = null;
+        const home = p.home ? { ab: p.home.alias, sc: p.home.score } : g && g.home;
+        const away = p.away ? { ab: p.away.alias, sc: p.away.score } : g && g.away;
+        if (home && away) {
+          const mine = home.ab === t ? home : away, oth = home.ab === t ? away : home;
+          opp = oth.ab; ts = mine.sc; os = oth.sc;
         }
-        return {
-          acct, order: e.order,
-          alive: !!(e.state && e.state.alive),
-          lives: e.state ? e.state.livesRemaining : null,
-          elimWeek: e.state && e.state.eliminatedSlateId ? slateById[e.state.eliminatedSlateId] : null,
-          picks,
-        };
-      });
+        st = g ? g.st : (p.grade ? 'finalized' : null);
+        return { t, opp, ts, os, st, g: p.grade || null, missed: !!p.isMissedPick };
+      };
+      // Entradas de MIS DOS cuentas desde la tabla de posiciones (visible con cualquier sesión).
+      const entries = [];
+      for (const [uid, name] of Object.entries(ACCT_BY_UID)) {
+        let rows = [];
+        try { rows = (await get(`team-survivor/standings?contestId=${sv.id}&limit=20&userId=${uid}`)).data || []; }
+        catch (e) { continue; }
+        for (const e of rows) {
+          if (!e.user || e.user.id !== uid) continue;
+          const picks = {};
+          for (const sl of e.slates || []) {
+            const p = sl.picks && sl.picks[0];
+            const wk = slateById[sl.slateId];
+            if (p && wk) picks[wk] = mkPick(p);
+          }
+          entries.push({
+            acct: name, order: e.entry.order,
+            alive: e.entry.status === 'active' && !e.eliminatedSlateId,
+            lives: e.livesRemaining,
+            elimWeek: e.eliminatedSlateId ? slateById[e.eliminatedSlateId] : null,
+            picks,
+          });
+        }
+      }
+      // La cuenta con sesión ve además sus piques aún no revelados (semana en curso).
+      try {
+        const myEnts = (await get(`my-entries?contestId=${sv.id}&limit=20&offset=0&includePicks=true`)).data;
+        for (const e of myEnts) {
+          const tgt = entries.find(x => x.acct === acct && x.order === e.order);
+          if (!tgt) continue;
+          for (const sl of (e.picks && e.picks.slates) || []) {
+            const p = sl.picks && sl.picks[0];
+            const wk = slateById[sl.slateId];
+            if (p && wk && !tgt.picks[wk]) tgt.picks[wk] = mkPick(p);
+          }
+        }
+      } catch (e) { /* sin entradas propias en este concurso */ }
       const nextSlate = slates.find(s => s.status !== 'settled');
       // Equipos más escogidos de la semana en curso (se revelan al cerrar cada juego).
       let topPicks = null;
